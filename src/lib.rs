@@ -13,42 +13,21 @@ pub mod middleware;
 pub mod requests;
 pub mod responses;
 pub mod routes;
-pub mod slipway;
 pub mod state;
 
-use route::{Router, Routes};
+use route::Routes;
 use securecookie::Codec;
-use session::Session;
 use tower_http::services::ServeDir;
-use vite::Vite;
 
 use crate::{error::AppError, state::App};
 
-/// Routes plus the session, CSRF and Inertia layers, and static files from `public/`.
-pub fn router<St: session::Store>(app: &App, sessions: St, codec: Codec, vite: Vite) -> Result<Routes, AppError> {
-    let asset_version = vite.manifest_hash().to_owned();
-    let mut pages = inertia::layer()
-        .root_template("resources/views/app.html")
-        .pages_dir("resources/js/pages")
-        .version(&asset_version)
-        .head(move || vite.tags())
-        .share({
-            let (app_name, store) = (app.cfg.app_name.clone(), app.slipway.clone());
-            move |ext| slipway::handlers::shared(&store, &app_name, ext.get::<Session>())
-        });
-    if let Some(url) = &app.cfg.ssr_url {
-        pages = pages.ssr(url);
-    }
+/// The docs site, built into `docs/dist` by `cargo run --manifest-path docs/Cargo.toml`.
+pub const SITE_DIR: &str = "docs/dist";
 
-    // URLs that match no route and no file in public/ render the 404 page.
-    let mut missing = Router::new();
-    missing.get("/{*path}", slipway::handlers::missing);
-    let missing = missing.layer(pages.clone()).build(app.clone())?;
-
-    Ok(routes::register(Router::new())
+/// Routes plus the session layer; any other URL is a file from the docs site.
+pub fn router<St: session::Store>(app: &App, sessions: St, codec: Codec) -> Result<Routes, AppError> {
+    Ok(routes::register(route::Router::new())
         .layer(session::layer(sessions, codec))
-        .layer(csrf::layer::<Session>())
-        .layer(pages)
-        .fallback(ServeDir::new("public").not_found_service(missing))
+        .fallback(ServeDir::new(SITE_DIR))
         .build(app.clone())?)
 }

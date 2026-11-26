@@ -5,8 +5,6 @@ pub struct Config {
     pub app_name: String,
     pub app_key: String,
     pub database_url: String,
-    /// The Inertia SSR server, e.g. `http://127.0.0.1:13714`. Unset: render on the client.
-    pub ssr_url: Option<String>,
 }
 
 impl Config {
@@ -16,7 +14,6 @@ impl Config {
             app_name: std::env::var("APP_NAME").unwrap_or_else(|_| "cloudsandbox".into()),
             app_key: required("APP_KEY")?,
             database_url: required("DATABASE_URL")?,
-            ssr_url: std::env::var("INERTIA_SSR_URL").ok().filter(|u| !u.is_empty()),
         })
     }
 }
