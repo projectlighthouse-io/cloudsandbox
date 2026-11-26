@@ -1,4 +1,10 @@
-<!-- Placeholder until this page is built from the design. Shows the props it receives. -->
+<script setup lang="ts">
+import Placeholder from '../components/Placeholder.vue'
+import AppLayout from '../layouts/AppLayout.vue'
+
+defineOptions({ layout: AppLayout })
+</script>
+
 <template>
-  <pre>{{ $page.props }}</pre>
+  <Placeholder />
 </template>
