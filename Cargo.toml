@@ -33,20 +33,3 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 http-body-util = "0.1"
 serde_json = "1"
 tokio = { version = "1", features = ["test-util"] }
-
-# Use the local foundry checkout until its latest fixes are pushed. Remove this
-# block to go back to the git versions.
-[patch."https://github.com/projectlighthouse-io/cloudfoundry"]
-action = { path = "../foundry/crates/action" }
-command = { path = "../foundry/crates/command" }
-csrf = { path = "../foundry/crates/csrf" }
-db = { path = "../foundry/crates/db" }
-event = { path = "../foundry/crates/event" }
-inertia = { path = "../foundry/crates/inertia" }
-queue = { path = "../foundry/crates/queue" }
-route = { path = "../foundry/crates/route" }
-securecookie = { path = "../foundry/crates/securecookie" }
-session = { path = "../foundry/crates/session" }
-sse = { path = "../foundry/crates/sse" }
-validate = { path = "../foundry/crates/validate" }
-vite = { path = "../foundry/crates/vite" }

@@ -5,6 +5,7 @@ version = 4
 [[package]]
 name = "action"
 version = "0.1.0"
+source = "git+https://github.com/projectlighthouse-io/cloudfoundry#3f445076150cd1050d5a720f5d9ee29938133cfb"
 
 [[package]]
 name = "aead"
@@ -265,6 +266,7 @@ checksum = "1d07550c9036bf2ae0c684c4297d503f838287c83c53686d05370d0e139ae570"
 [[package]]
 name = "command"
 version = "0.1.0"
+source = "git+https://github.com/projectlighthouse-io/cloudfoundry#3f445076150cd1050d5a720f5d9ee29938133cfb"
 dependencies = [
  "action",
  "clap",
@@ -335,6 +337,7 @@ dependencies = [
 [[package]]
 name = "csrf"
 version = "0.1.0"
+source = "git+https://github.com/projectlighthouse-io/cloudfoundry#3f445076150cd1050d5a720f5d9ee29938133cfb"
 dependencies = [
  "base64",
  "bytes",
@@ -351,6 +354,7 @@ dependencies = [
 [[package]]
 name = "db"
 version = "0.1.0"
+source = "git+https://github.com/projectlighthouse-io/cloudfoundry#3f445076150cd1050d5a720f5d9ee29938133cfb"
 dependencies = [
  "sqlx",
 ]
@@ -448,6 +452,7 @@ dependencies = [
 [[package]]
 name = "event"
 version = "0.1.0"
+source = "git+https://github.com/projectlighthouse-io/cloudfoundry#3f445076150cd1050d5a720f5d9ee29938133cfb"
 dependencies = [
  "clap",
  "queue",
@@ -896,6 +901,7 @@ dependencies = [
 [[package]]
 name = "inertia"
 version = "0.1.0"
+source = "git+https://github.com/projectlighthouse-io/cloudfoundry#3f445076150cd1050d5a720f5d9ee29938133cfb"
 dependencies = [
  "bytes",
  "http-body-util",
@@ -1273,6 +1279,7 @@ dependencies = [
 [[package]]
 name = "queue"
 version = "0.1.0"
+source = "git+https://github.com/projectlighthouse-io/cloudfoundry#3f445076150cd1050d5a720f5d9ee29938133cfb"
 dependencies = [
  "clap",
  "serde",
@@ -1365,6 +1372,7 @@ checksum = "d902046e6a28a1e4c3cab97258a0ce11e994903f01c2d97a9447a0b3df85f4f6"
 [[package]]
 name = "route"
 version = "0.1.0"
+source = "git+https://github.com/projectlighthouse-io/cloudfoundry#3f445076150cd1050d5a720f5d9ee29938133cfb"
 dependencies = [
  "action",
  "bytes",
@@ -1426,6 +1434,7 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 [[package]]
 name = "securecookie"
 version = "0.1.0"
+source = "git+https://github.com/projectlighthouse-io/cloudfoundry#3f445076150cd1050d5a720f5d9ee29938133cfb"
 dependencies = [
  "base64",
  "chacha20poly1305",
@@ -1494,6 +1503,7 @@ dependencies = [
 [[package]]
 name = "session"
 version = "0.1.0"
+source = "git+https://github.com/projectlighthouse-io/cloudfoundry#3f445076150cd1050d5a720f5d9ee29938133cfb"
 dependencies = [
  "base64",
  "clap",
@@ -1797,6 +1807,7 @@ dependencies = [
 [[package]]
 name = "sse"
 version = "0.1.0"
+source = "git+https://github.com/projectlighthouse-io/cloudfoundry#3f445076150cd1050d5a720f5d9ee29938133cfb"
 dependencies = [
  "bytes",
  "futures-core",
@@ -2210,6 +2221,7 @@ checksum = "3a3b425286980a367278453f3b6d28cdcb134b574e5a35824a6ff5eebad50bb6"
 [[package]]
 name = "validate"
 version = "0.1.0"
+source = "git+https://github.com/projectlighthouse-io/cloudfoundry#3f445076150cd1050d5a720f5d9ee29938133cfb"
 dependencies = [
  "route",
  "serde",
@@ -2236,6 +2248,7 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 [[package]]
 name = "vite"
 version = "0.1.0"
+source = "git+https://github.com/projectlighthouse-io/cloudfoundry#3f445076150cd1050d5a720f5d9ee29938133cfb"
 dependencies = [
  "serde",
  "serde_json",
