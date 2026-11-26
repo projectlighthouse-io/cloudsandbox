@@ -29,7 +29,7 @@ async fn serves_the_docs_site() {
     let (status, body) = get("/").await;
     assert_eq!(status, StatusCode::OK);
     assert!(body.contains("Opinionated Rust batteries."));
-    assert_eq!(get("/docs/route/").await.0, StatusCode::OK);
+    assert_eq!(get("/docs/crates/route/").await.0, StatusCode::OK);
     assert_eq!(get("/site.css").await.0, StatusCode::OK);
     assert_eq!(get("/servers").await.0, StatusCode::NOT_FOUND);
 }

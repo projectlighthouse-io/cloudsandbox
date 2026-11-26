@@ -17,7 +17,7 @@ const CATS: &[(&str, &[&str])] = &[
     ("Frontend", &["inertia", "vite", "sse"]),
     ("Background work", &["queue", "event", "command"]),
     ("Data", &["db"]),
-    ("Auth", &["auth", "password", "socialite"]),
+    ("Modules", &["auth", "password", "socialite"]),
 ];
 const MODULES: &[&str] = &["auth", "password", "socialite"];
 
@@ -39,9 +39,13 @@ fn pages() -> Vec<Page> {
     out
 }
 
-/// A page's URL: `/docs/` for the guide, `/docs/<id>/` for a component.
-fn href(id: &str) -> String {
-    if id == "docs" { "/docs/".into() } else { format!("/docs/{id}/") }
+/// A page's URL: `/docs/` for the guide, `/docs/crates/<id>/` or `/docs/modules/<id>/` for a component.
+pub fn href(id: &str) -> String {
+    match id {
+        "docs" => "/docs/".into(),
+        id if MODULES.contains(&id) => format!("/docs/modules/{id}/"),
+        id => format!("/docs/crates/{id}/"),
+    }
 }
 
 /// Python's `html.escape(t, quote=True)`.
@@ -142,7 +146,7 @@ fn foot() -> String {
     let cols: String = CATS
         .iter()
         .map(|(cat, ids)| {
-            let links: String = ids.iter().map(|i| format!(r#"<a class="mono" href="/docs/{i}/">{i}</a>"#)).collect();
+            let links: String = ids.iter().map(|i| format!(r#"<a class="mono" href="{}">{i}</a>"#, href(i))).collect();
             format!("<div><h3>{cat}</h3>{links}</div>")
         })
         .collect();
@@ -193,8 +197,7 @@ fn side(active: &str) -> String {
         write!(out, r#"<p class="sg mono">{cat}</p>"#).unwrap();
         for i in *ids {
             let cur = if *i == active { r#" aria-current="page""# } else { "" };
-            let module = if MODULES.contains(i) { r#"<span class="mod">module</span>"# } else { "" };
-            write!(out, r#"<a class="mono" href="/docs/{i}/"{cur}>{i}{module}</a>"#).unwrap();
+            write!(out, r#"<a class="mono" href="{}"{cur}>{i}</a>"#, href(i)).unwrap();
         }
     }
     out
@@ -319,7 +322,7 @@ fn main() {
     fs::write(out.join("index.html"), landing::page(&index_json)).unwrap();
     let _ = fs::remove_dir_all(out.join("docs"));
     for (i, p) in all.iter().enumerate() {
-        let dir = if p.id == "docs" { out.join("docs") } else { out.join("docs").join(p.id) };
+        let dir = if p.id == "docs" { out.join("docs") } else { out.join(href(p.id).trim_matches('/')) };
         fs::create_dir_all(&dir).unwrap();
         fs::write(dir.join("index.html"), doc_page(&all, i, &raws[i], &metas[i], &rendered[i], &index_json)).unwrap();
     }

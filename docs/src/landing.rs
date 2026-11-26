@@ -27,7 +27,8 @@ fn strip(num: &str, name: &str, key: &str, dark: bool) -> String {
 
 fn feature(id: &str, title: &str, body: &str) -> String {
     format!(
-        r#"<a class="cell fcell reveal" href="/docs/{id}/"><div class="ftext"><p class="flabel mono">{id}</p><h3>{title}</h3><p>{body}</p></div><div class="fmock">{}</div></a>"#,
+        r#"<a class="cell fcell reveal" href="{}"><div class="ftext"><p class="flabel mono">{id}</p><h3>{title}</h3><p>{body}</p></div><div class="fmock">{}</div></a>"#,
+        crate::href(id),
         mock(id)
     )
 }

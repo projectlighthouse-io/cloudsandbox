@@ -286,7 +286,7 @@ a.cell:hover,.tcell:hover{background:var(--tint)}
 .dside a.mono{font-size:13px}
 .dside a:hover{background:var(--tint);color:var(--ink)}
 .dside a[aria-current]{background:var(--accent-soft);color:var(--acc-text);font-weight:500}
-.mod{margin-left:auto;font-family:var(--sans);font-size:10.5px;color:var(--faint)}
+
 .dmain{padding:40px clamp(20px,4vw,64px) 80px;min-width:0}
 .crumb{margin:0;font-size:12px;letter-spacing:.04em;color:var(--acc-text)}
 .crumb a{text-decoration:none}.crumb a:hover{text-decoration:underline}
