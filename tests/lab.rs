@@ -15,7 +15,7 @@ async fn shared_props_on_every_page() {
     let props = r.props();
     assert_eq!(props["app_name"], "cloudsandbox");
     assert!(props["csrf_token"].as_str().is_some_and(|t| t.len() > 20));
-    assert_eq!(props["flash"], json!(null));
+    assert_eq!(props["flash"]["success"], json!(null));
     assert_eq!(r.page()["component"], "lab/index");
 }
 
@@ -104,8 +104,8 @@ async fn success_flashes_for_one_request() {
     c.visit("/lab/form", &[]).await;
     let r = c.send(Method::POST, "/lab/form/contact", json!({ "name": "Ada", "email": "ada@example.com", "message": "Hello from the lab" }), &[]).await;
     assert_eq!(r.status, StatusCode::SEE_OTHER);
-    assert_eq!(c.visit("/lab/form", &[]).await.props()["flash"], "Thanks Ada, your message was received.");
-    assert_eq!(c.visit("/lab/form", &[]).await.props()["flash"], json!(null), "gone after one request");
+    assert_eq!(c.visit("/lab/form", &[]).await.props()["flash"]["success"], "Thanks Ada, your message was received.");
+    assert_eq!(c.visit("/lab/form", &[]).await.props()["flash"]["success"], json!(null), "gone after one request");
 }
 
 #[tokio::test]
@@ -115,7 +115,7 @@ async fn plain_html_form_with_csrf_field() {
     let form = |t: &str| Some(("application/x-www-form-urlencoded", format!("_token={t}&name=Grace")));
     assert_eq!(c.request(Method::POST, "/lab/form/plain", &[], form("wrong")).await.status.as_u16(), 419);
     assert_eq!(c.request(Method::POST, "/lab/form/plain", &[], form(&token)).await.status, StatusCode::SEE_OTHER);
-    assert_eq!(c.visit("/lab/form", &[]).await.props()["flash"], "Plain form posted by Grace (CSRF via _token).");
+    assert_eq!(c.visit("/lab/form", &[]).await.props()["flash"]["success"], "Plain form posted by Grace (CSRF via _token).");
 }
 
 #[tokio::test]
@@ -125,7 +125,7 @@ async fn unsafe_methods_redirect_with_303() {
     for method in [Method::PUT, Method::PATCH, Method::DELETE] {
         let r = c.send(method.clone(), "/lab/redirects", json!({}), &[]).await;
         assert_eq!((r.status, r.location()), (StatusCode::SEE_OTHER, "/lab/redirects"));
-        let flash = c.visit("/lab/redirects", &[]).await.props()["flash"].as_str().unwrap().to_owned();
+        let flash = c.visit("/lab/redirects", &[]).await.props()["flash"]["success"].as_str().unwrap().to_owned();
         assert!(flash.starts_with(method.as_str()), "{flash}");
     }
 }

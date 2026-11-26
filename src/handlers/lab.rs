@@ -23,10 +23,8 @@ fn clock() -> String {
 }
 
 fn flash(session: &Session, message: &str) {
-    session.flash("status", message).expect("a string serializes");
+    crate::slipway::handlers::flash_success(session, message);
 }
-
-// ---- index ----
 
 #[derive(Serialize)]
 pub struct Experiment {
@@ -53,14 +51,10 @@ pub async fn index(_: ()) -> Page<Index> {
     inertia::render("lab/index", Index { experiments })
 }
 
-// ---- basics ----
-
 pub async fn basics(_: ()) -> Page<Basics> {
     let renders = RENDERS.fetch_add(1, Ordering::SeqCst) + 1;
     inertia::render("lab/basics", Basics { server_time: clock(), renders, tags: vec!["rust".into(), "inertia".into(), "vue".into()] })
 }
-
-// ---- optional & deferred ----
 
 #[derive(Serialize)]
 pub struct Stats {
@@ -101,8 +95,6 @@ pub async fn lazy(visit: Visit) -> Page<Lazy> {
     inertia::render("lab/lazy", Lazy { stats, report, activity })
 }
 
-// ---- merge ----
-
 #[derive(Deserialize)]
 pub struct PageQuery {
     page: Option<u32>,
@@ -126,8 +118,6 @@ pub async fn merge(Query(q): Query<PageQuery>) -> Page<Feed> {
     let items = ((page - 1) * 5 + 1..=page * 5).map(|id| Item { id, text: format!("Item {id}, loaded with page {page}") }).collect();
     inertia::render("lab/merge", Feed { page, has_more: page < 5, items: Merge::new(items).match_on("id") })
 }
-
-// ---- once ----
 
 #[derive(Serialize)]
 pub struct Plan {
@@ -159,8 +149,6 @@ pub async fn once(visit: Visit) -> Page<OncePage> {
 pub async fn once_again(visit: Visit) -> Page<OncePage> {
     once_page(visit, "Checkout").await
 }
-
-// ---- forms ----
 
 #[derive(Deserialize)]
 pub struct Contact {
@@ -213,8 +201,6 @@ pub async fn plain((session, Form(input)): (Session, Form<Plain>)) -> Redirect {
     Redirect::to_route("lab.form")
 }
 
-// ---- redirects ----
-
 pub async fn redirects(_: ()) -> Page<()> {
     inertia::render("lab/redirects", ())
 }
@@ -223,8 +209,6 @@ pub async fn mutate((session, req): (Session, Request<Body>)) -> Redirect {
     flash(&session, &format!("{} handled at {}; you were sent back with a 303.", req.method(), clock()));
     Redirect::to_route("lab.redirects")
 }
-
-// ---- missing component ----
 
 pub async fn broken(_: ()) -> Page<()> {
     inertia::render("lab/does-not-exist", ())

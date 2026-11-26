@@ -121,6 +121,24 @@ impl Client {
         self.visit(uri, &headers).await
     }
 
+    /// A `multipart/form-data` Inertia submission, as `useForm` sends when a
+    /// file is attached. `fields` are text; `file` is `(field, filename, bytes)`.
+    pub async fn send_multipart(&mut self, method: Method, uri: &str, fields: &[(&str, &str)], file: Option<(&str, &str, &str)>) -> Response {
+        let mut body = String::new();
+        for (name, value) in fields {
+            body.push_str(&format!("--BOUNDARY\r\nContent-Disposition: form-data; name=\"{name}\"\r\n\r\n{value}\r\n"));
+        }
+        if let Some((name, filename, content)) = file {
+            body.push_str(&format!(
+                "--BOUNDARY\r\nContent-Disposition: form-data; name=\"{name}\"; filename=\"{filename}\"\r\nContent-Type: application/octet-stream\r\n\r\n{content}\r\n"
+            ));
+        }
+        body.push_str("--BOUNDARY--\r\n");
+        let (version, xsrf) = (self.version.clone(), self.xsrf());
+        let headers = [("x-inertia", "true"), ("x-inertia-version", version.as_str()), ("x-xsrf-token", xsrf.as_str())];
+        self.request(method, uri, &headers, Some(("multipart/form-data; boundary=BOUNDARY", body))).await
+    }
+
     /// An Inertia form submission (what `useForm` and `router.post` send).
     pub async fn send(&mut self, method: Method, uri: &str, json: Value, extra: &[(&str, &str)]) -> Response {
         let (version, xsrf) = (self.version.clone(), self.xsrf());

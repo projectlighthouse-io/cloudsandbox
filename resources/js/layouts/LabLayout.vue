@@ -4,7 +4,7 @@ import { computed } from 'vue'
 
 defineProps<{ title: string }>()
 
-const page = usePage<{ app_name: string; flash: string | null }>()
+const page = usePage<{ app_name: string; flash: { success: string | null } }>()
 const links = [
   { href: '/lab', label: 'Lab' },
   { href: '/lab/basics', label: 'Basics' },
@@ -15,7 +15,7 @@ const links = [
   { href: '/lab/redirects', label: 'Redirects' },
 ]
 const active = (href: string) => (href === '/lab' ? page.url === '/lab' : page.url.startsWith(href))
-const flash = computed(() => page.props.flash)
+const flash = computed(() => page.props.flash.success)
 </script>
 
 <template>

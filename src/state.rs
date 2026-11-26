@@ -18,10 +18,12 @@ pub struct App {
     pub queue: Queue<PostgresStore>,
     #[allow(dead_code)]
     pub events: Arc<Events<App>>,
+    /// Slipway's in-memory mock data.
+    pub slipway: crate::slipway::Store,
 }
 
 impl App {
     pub fn new(cfg: Config, db: Db<Primary>, queue: Queue<PostgresStore>, events: Arc<Events<App>>) -> Self {
-        Self { cfg: Arc::new(cfg), db, queue, events }
+        Self { cfg: Arc::new(cfg), db, queue, events, slipway: crate::slipway::Store::seeded() }
     }
 }

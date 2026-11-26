@@ -13,6 +13,7 @@ pub mod middleware;
 pub mod requests;
 pub mod responses;
 pub mod routes;
+pub mod slipway;
 pub mod state;
 
 use route::{Router, Routes};
@@ -32,15 +33,8 @@ pub fn router<St: session::Store>(app: &App, sessions: St, codec: Codec, vite: V
         .version(&asset_version)
         .head(move || vite.tags())
         .share({
-            let app_name = app.cfg.app_name.clone();
-            move |ext| {
-                let session = ext.get::<Session>();
-                responses::lab::Shared {
-                    app_name: app_name.clone(),
-                    flash: session.and_then(|s| s.get::<String>("status").ok().flatten()),
-                    csrf_token: session.and_then(|s| s.get::<String>("_token").ok().flatten()),
-                }
-            }
+            let (app_name, store) = (app.cfg.app_name.clone(), app.slipway.clone());
+            move |ext| slipway::handlers::shared(&store, &app_name, ext.get::<Session>())
         });
     if let Some(url) = &app.cfg.ssr_url {
         pages = pages.ssr(url);

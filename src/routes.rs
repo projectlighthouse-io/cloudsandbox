@@ -7,6 +7,8 @@ pub fn register(mut r: Router<App>) -> Router<App> {
     r.get("/", handlers::home).name("home");
     r.get("/health", handlers::health).name("health");
 
+    crate::slipway::register(&mut r);
+
     r.group("/lab", |r| {
         use handlers::lab;
         r.name_prefix("lab.");
