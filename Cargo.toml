@@ -7,12 +7,12 @@ edition = "2024"
 action = { git = "https://github.com/projectlighthouse-io/cloudfoundry" }
 command = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["action"] }
 db = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["postgres"] }
-route = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["server", "command", "action"] }
+route = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["server", "command", "action", "multipart"] }
 validate = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["route"] }
 csrf = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["route"] }
 securecookie = { git = "https://github.com/projectlighthouse-io/cloudfoundry" }
 session = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["postgres", "route", "csrf", "command"] }
-inertia = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["validate", "ssr"] }
+inertia = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["validate", "ssr", "session"] }
 vite = { git = "https://github.com/projectlighthouse-io/cloudfoundry" }
 queue = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["postgres", "command"] }
 event = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["queue", "command"] }
@@ -28,3 +28,24 @@ ts-rs = "12"
 tower-http = { version = "0.6", features = ["fs"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[dev-dependencies]
+http-body-util = "0.1"
+serde_json = "1"
+
+# Use the local foundry checkout until its latest fixes are pushed. Remove this
+# block to go back to the git versions.
+[patch."https://github.com/projectlighthouse-io/cloudfoundry"]
+action = { path = "../foundry/crates/action" }
+command = { path = "../foundry/crates/command" }
+csrf = { path = "../foundry/crates/csrf" }
+db = { path = "../foundry/crates/db" }
+event = { path = "../foundry/crates/event" }
+inertia = { path = "../foundry/crates/inertia" }
+queue = { path = "../foundry/crates/queue" }
+route = { path = "../foundry/crates/route" }
+securecookie = { path = "../foundry/crates/securecookie" }
+session = { path = "../foundry/crates/session" }
+sse = { path = "../foundry/crates/sse" }
+validate = { path = "../foundry/crates/validate" }
+vite = { path = "../foundry/crates/vite" }
