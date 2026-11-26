@@ -90,7 +90,8 @@ fn team_sites(data: &Data, team: u64) -> Vec<u64> {
 fn metric(seed: u64, at_ms: u64, base: u32) -> u32 {
     let t = at_ms as f64 / 1000.0;
     let s = seed as f64;
-    let v = base as f64 + 9.0 * (t / 40.0 + s).sin() + 4.0 * (t / 9.0 + s * 1.7).sin();
+    // The fast term looks jagged at the 5s sampling, like real load.
+    let v = base as f64 + 6.0 * (t / 40.0 + s).sin() + 3.0 * (t / 9.0 + s * 1.7).sin() + 4.0 * (t / 1.7 + s * 3.1).sin();
     v.clamp(1.0, 99.0) as u32
 }
 

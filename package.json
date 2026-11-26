@@ -7,10 +7,15 @@
     "ssr": "node bootstrap/ssr/ssr.js"
   },
   "dependencies": {
+    "@fontsource/inter": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
     "@inertiajs/vue3": "^3.11.0",
+    "@tailwindcss/vite": "^4.3.5",
+    "tailwindcss": "^4.3.5",
     "vue": "^3.5.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
     "@vitejs/plugin-vue": "^6.0.0",
     "typescript": "~5.9.3",
     "vite": "^8.4.0"

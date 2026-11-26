@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import tailwindcss from '@tailwindcss/vite'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig, type Plugin } from 'vite'
 
@@ -23,7 +24,7 @@ function hotFile(): Plugin {
 export default defineConfig(({ command, isSsrBuild }) => ({
   base: command === 'build' ? '/build/' : '/',
   publicDir: false,
-  plugins: [vue(), hotFile()],
+  plugins: [vue(), tailwindcss(), hotFile()],
   // The SSR bundle (`vite build --ssr resources/js/ssr.ts`) runs in Node: `npm run ssr`.
   build: isSsrBuild
     ? { outDir: 'bootstrap/ssr' }

@@ -1,7 +1,5 @@
 // The props contract between the Rust handlers (src/slipway/handlers.rs) and the pages.
 
-export type Status = 'active' | 'provisioning' | 'stopped' | 'failed' | 'deployed' | 'deploying' | 'suspended' | 'queued' | 'running' | 'finished' | 'cancelled'
-
 export interface User { id: number; name: string; email: string; avatar: string | null }
 export interface Team { id: number; name: string }
 
@@ -16,20 +14,36 @@ export interface Shared {
   [key: string]: unknown
 }
 
+export type ServerStatus = 'healthy' | 'degraded' | 'provisioning' | 'offline'
+export type DeploymentStatus = 'queued' | 'running' | 'finished' | 'failed' | 'cancelled'
+export type Tone = 'ok' | 'warn' | 'bad' | 'info' | 'idle'
+
 export interface Server {
   id: number; name: string; provider: string; region: string; ip: string
-  status: Status; cpu: number; memory: number; disk: number; sitesCount: number
+  status: ServerStatus; cpu: number | null; memory: number | null; disk: number
+  vcpus: number; memoryGb: number; sitesCount: number
 }
 
 export interface Site {
   id: number; serverId: number; domain: string; repository: string; branch: string
-  runtime: string; status: Status; lastDeployedAt: number | null
+  runtime: string; status: 'deployed' | 'deploying' | 'failed' | 'suspended'; lastDeployedAt: number | null
 }
 
 export interface Deployment {
   id: number; siteId: number; site: string; commit: string; message: string; author: string
-  branch: string; status: Status; startedAt: number; durationMs: number | null
+  branch: string; status: DeploymentStatus; startedAt: number; durationMs: number | null
 }
+
+export interface Tile {
+  label: string
+  value: number
+  delta: { text: string; good: boolean }
+  series: number[]
+  color: 'sky' | 'indigo' | 'red'
+  note: { text: string; tone: Tone; at: number | null }
+}
+
+export interface Usage { serverId: number; name: string; cpu: number | null; memory: number | null; trend: number[] }
 
 export interface Paginated<T> { data: T[]; meta: { page: number; perPage: number; total: number } }
 
