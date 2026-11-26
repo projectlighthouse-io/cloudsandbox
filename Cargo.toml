@@ -1,0 +1,30 @@
+[package]
+name = "cloudsandbox"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+action = { git = "https://github.com/projectlighthouse-io/cloudfoundry" }
+command = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["action"] }
+db = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["postgres"] }
+route = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["server", "command", "action"] }
+validate = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["route"] }
+csrf = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["route"] }
+securecookie = { git = "https://github.com/projectlighthouse-io/cloudfoundry" }
+session = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["postgres", "route", "csrf", "command"] }
+inertia = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["validate", "ssr"] }
+vite = { git = "https://github.com/projectlighthouse-io/cloudfoundry" }
+queue = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["postgres", "command"] }
+event = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["queue", "command"] }
+sse = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["route"] }
+
+clap = { version = "4", features = ["derive"] }
+dotenvy = "0.15"
+serde = { version = "1", features = ["derive"] }
+sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "postgres", "macros", "migrate"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
+tower = "0.5"
+ts-rs = "12"
+tower-http = { version = "0.6", features = ["fs"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
