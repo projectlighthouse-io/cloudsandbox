@@ -40,10 +40,15 @@ pub fn router<St: session::Store>(app: &App, sessions: St, codec: Codec, vite: V
         pages = pages.ssr(url);
     }
 
+    // URLs that match no route and no file in public/ render the 404 page.
+    let mut missing = Router::new();
+    missing.get("/{*path}", slipway::handlers::missing);
+    let missing = missing.layer(pages.clone()).build(app.clone())?;
+
     Ok(routes::register(Router::new())
         .layer(session::layer(sessions, codec))
         .layer(csrf::layer::<Session>())
         .layer(pages)
-        .fallback(ServeDir::new("public"))
+        .fallback(ServeDir::new("public").not_found_service(missing))
         .build(app.clone())?)
 }

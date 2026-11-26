@@ -2,11 +2,9 @@ use route::Router;
 
 use crate::{handlers, state::App};
 
-/// Every route in one place.
+/// Every route in one place: Slipway at the root, the Inertia lab under /lab.
 pub fn register(mut r: Router<App>) -> Router<App> {
-    r.get("/", handlers::home).name("home");
     r.get("/health", handlers::health).name("health");
-
     crate::slipway::register(&mut r);
 
     r.group("/lab", |r| {
