@@ -93,7 +93,9 @@ loaded at most once per request, and only if something asks for it.
 ## Logging in
 
 Implement `Credentials` as well, so `auth` can find a user by login and read
-and update the password hash. Then `auth.attempt` does the whole login:
+and update the password hash. The hash is an `Option`: accounts made through
+[social login](socialite.md) have none, and password login refuses them until
+they set one through "forgot password". Then `auth.attempt` does the whole login:
 
 ```rust
 pub async fn login(cx: Cx<App>, (auth, input): (Auth<User>, Valid<Json<Login>>)) -> Result<Redirect, Response<Body>> {
@@ -147,6 +149,7 @@ user stays logged in on the device they used:
 match auth.change_password(&users, &input.current_password, &input.password).await {
     Ok(()) => Ok(StatusCode::NO_CONTENT),
     Err(ChangeError::WrongPassword) => Err(field_error("current_password", "The current password is incorrect.")),
+    Err(ChangeError::NoPassword) => Err(field_error("current_password", "Set a password with “forgot password” first.")),
     Err(ChangeError::NotLoggedIn) => Err(StatusCode::UNAUTHORIZED.into_response()),
     Err(ChangeError::Other(e)) => Err(server_error(e)),
 }

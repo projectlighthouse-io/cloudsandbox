@@ -43,6 +43,9 @@ socialite = { git = "https://github.com/projectlighthouse-io/cloudfoundry", feat
 | `oidc` | `Oidc`: any OpenID Connect provider (Okta, Keycloak, Azure AD, ...) | Yes, with a verified flag |
 | `auth0` | `Auth0` (turns on `oidc`) | Yes, with a verified flag |
 
+The `route` feature adds ready-made routes; see
+[Ready-made routes](#ready-made-routes).
+
 ## Configuring a provider
 
 Create the provider once at startup with your client credentials and the URL
@@ -95,7 +98,7 @@ async fn redirect(cx: Cx<App>, session: Session) -> Redirect {
 // GET /auth/google/callback
 async fn callback(cx: Cx<App>, (auth, session, Query(cb)): (Auth<User>, Session, Query<Callback>)) -> Result<Redirect, AppError> {
     let social = cx.google.social_user(&session, cb).await?;
-    let user = cx.users.find_or_create_social(&social).await?;
+    let user = cx.users.find_or_create_social(&social, auth.user()).await?;
     auth.login(&user);
     Ok(Redirect::to_route("dashboard"))
 }
@@ -108,6 +111,70 @@ provider that accepts it; Reddit does not, so it is off there.
 
 If the user declines, or the provider reports an error, you get
 `Error::Denied`. A network or decoding failure is `Error::Http`.
+
+## Ready-made routes
+
+With the `route` feature, one call registers both routes for a provider:
+
+```rust
+socialite::routes(&mut r, google, handlers::social::callback);
+// GET /auth/google            redirects to Google           (route name `social.google`)
+// GET /auth/google/callback   runs your callback handler    (route name `social.google.callback`)
+```
+
+Your callback takes a `SocialCallback`. By the time your handler runs, `state`
+has been checked and the code exchanged; `SocialCallback` holds the result:
+
+```rust
+async fn callback(cx: Cx<App>, (auth, social): (Auth<User>, SocialCallback)) -> Redirect {
+    match social.0 {
+        Ok(user) => { /* find or create the account, auth.login, redirect */ }
+        Err(e) => { /* declined, forged state, network failure: your choice of page */ }
+    }
+}
+```
+
+Register each provider you configured. The session layer must run before
+these routes.
+
+## Publishing the social login files
+
+`art publish socialite` copies the account handling into your app, after
+`art publish auth`. Add `--driver sqlite` or `--driver mysql` for those
+databases, and `--with-ui` for the Inertia callback and the buttons:
+
+| Published to | Contents |
+| --- | --- |
+| `src/social.rs` | `Users::find_or_create_social`, the linking rules |
+| `src/handlers/social.rs` | The callback for every provider |
+| `resources/js/components/SocialButtons.vue` | "Continue with ..." links for the configured providers (`--with-ui`) |
+| `migrations/<timestamp>_create_social_accounts.*.sql` | One row per linked provider account |
+| `migrations/<timestamp>_allow_null_passwords.*.sql` | Makes `users.password_hash` nullable |
+
+`find_or_create_social` decides who the user is, in this order:
+
+1. An account already linked to this provider account logs in.
+2. A logged-in user gets the provider account linked to them.
+3. An account with the same email is the same person: the provider account is
+   linked to it.
+4. Otherwise a new account is created, with the provider's name and email and
+   no password.
+
+Reddit and X share no email address, so they can only be connected by a user
+who is already logged in.
+
+Accounts made this way have no password. Password login refuses them, and they
+can set a password through "forgot password". The `allow_null_passwords`
+migration makes that column nullable. Postgres and MySQL change the column in
+place. SQLite cannot, so its migration rebuilds the `users` table with foreign
+keys switched off; if you changed `users`, list your columns in that file.
+
+With `--with-ui`, share the list of configured providers with every page so
+the buttons know what to show:
+
+```rust
+inertia::layer().share(move |_| serde_json::json!({ "social": enabled.clone() }))
+```
 
 ## The social user
 
