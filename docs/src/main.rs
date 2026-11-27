@@ -278,7 +278,7 @@ fn doc_page(all: &[Page], i: usize, raw: &str, meta: &(String, String), r: &mark
 <aside class="dside" id="dside"><nav aria-label="Documentation">{}</nav></aside>
 <article class="dmain">
 <p class="crumb mono"><a href="/docs/">Docs</a> / <span>{}</span></p>
-<div class="dhead"><h1 class="{}">{}</h1><button type="button" class="btn btn-line btn-sm copy-page">{}<span>Copy page</span></button></div>
+<div class="dhead"><h1 class="{}">{}</h1><div class="page-actions"><button type="button" class="btn btn-line btn-sm copy-page">{}<span>Copy page</span></button><a class="btn btn-line btn-sm" href="{md}" title="This page as Markdown, for LLMs">Markdown</a><a class="btn btn-line btn-sm" href="{claude}" target="_blank" rel="noopener">Open in Claude</a></div></div>
 {lead}{meta_cells}{mock_html}
 <div class="prose">{body}</div>
 {pager}
@@ -291,7 +291,12 @@ fn doc_page(all: &[Page], i: usize, raw: &str, meta: &(String, String), r: &mark
         if is_comp { "mono" } else { "" },
         esc(p.title),
         ic("copy"),
-        raw.replace("</", "<\\/")
+        raw.replace("</", "<\\/"),
+        md = md_href(p.id),
+        claude = format!(
+            "https://claude.ai/new?q={}",
+            percent(&format!("Read {}{} and help me use it in my Rust app.", site(), md_href(p.id)))
+        ),
     );
     let lead_text = strip_tags(&r.lead);
     let desc = description(&lead_text, &paragraphs(&r.body));
@@ -320,6 +325,7 @@ fn doc_page(all: &[Page], i: usize, raw: &str, meta: &(String, String), r: &mark
             .join(",")
     );
     head(&title, desc, &path, "article", &ld)
+        .replace("</head>", &format!("<link rel=\"alternate\" type=\"text/markdown\" href=\"{}\">\n</head>", md_href(p.id)))
         + r##"<body class="doc"><a class="skip" href="#main">Skip to content</a>"##
         + &nav(if is_comp { "Components" } else { "Docs" })
         + &format!(r#"<button type="button" class="dmenu" aria-expanded="false" aria-controls="dside">{}<span>Menu</span></button>"#, ic("menu"))
@@ -382,6 +388,66 @@ fn description(lead: &str, body: &str) -> String {
             }
             out.push_str(word);
         }
+    }
+    out
+}
+
+/// The page's Markdown twin, for agents: `/docs/crates/route/` -> `/docs/crates/route.md`.
+fn md_href(id: &str) -> String {
+    format!("{}.md", href(id).trim_end_matches('/'))
+}
+
+const REPO: &str = "https://github.com/projectlighthouse-io/toolkit";
+
+fn percent(s: &str) -> String {
+    s.bytes().map(|b| if b.is_ascii_alphanumeric() || b"-._~".contains(&b) { (b as char).to_string() } else { format!("%{b:02X}") }).collect()
+}
+
+/// A page as Markdown for LLM agents: title and summary, then a metadata block
+/// (kind, version, install line, HTML URL), then the page, with links between
+/// pages pointing at their Markdown twins.
+fn page_markdown(all: &[Page], p: &Page, raw: &str, meta: &(String, String)) -> String {
+    let mut blocks = raw.trim().splitn(3, "\n\n");
+    let (title, lead, rest) = (blocks.next().unwrap_or(""), blocks.next().unwrap_or(""), blocks.next().unwrap_or(""));
+    let mut info = vec![format!("- Page: {}{}", site(), href(p.id))];
+    if p.id != "docs" {
+        let kind = if MODULES.contains(&p.id) { "module" } else { "crate" };
+        let (deps, version) = meta;
+        info.insert(0, format!("- Kind: {kind} (area: {})", p.group));
+        info.insert(1, format!("- Version: {version}{}", if version.starts_with("0.") { " (beta: minor versions may break the API)" } else { "" }));
+        info.insert(2, format!("- Install: `{} = {{ git = \"{REPO}\" }}` (git dependency; not on crates.io)", p.id));
+        if !deps.is_empty() {
+            info.insert(3, format!("- Builds on: {deps}"));
+        }
+    }
+    let mut body = format!("{title}\n\n{lead}\n\n{}\n\n{rest}\n", info.join("\n"));
+    for q in all {
+        let file = q.src.rsplit('/').next().unwrap_or(&q.src);
+        body = body.replace(&format!("]({file})"), &format!("]({}{})", site(), md_href(q.id)));
+    }
+    body
+}
+
+/// `/llms.txt` (llmstxt.org): what the toolkit is and a link to every page's Markdown.
+fn llms_txt(all: &[Page], leads: &[String]) -> String {
+    let mut out = format!(
+        "# {SITE_NAME}\n\n> Opinionated Rust batteries: small, independent crates for server-driven web apps (routing, validation, sessions, CSRF, auth, social login, rate limiting, Inertia + Vite, queues, events, server-sent events), plus `art`, a CLI that scaffolds and runs apps. Laravel is the reference for developer experience; each crate stands alone and the app owns its `main.rs`.\n\n\
+Key facts for agents:\n\n\
+- Install crates from git, not crates.io: `route = {{ git = \"{REPO}\" }}`. Optional parts are Cargo features listed on each page.\n\
+- Everything is beta (`0.x`): a minor version bump may break the API. Each page states its crate's version.\n\
+- Start an app with `cargo install --git {REPO} art` and `art new myapp` (Postgres by default; `--driver sqlite` or `--driver mysql`). `art publish <crate>` copies a module's handlers, migrations and pages into the app, to edit freely.\n\
+- No framework: there is no glue crate, ORM, controller or template layer. Handlers are plain async functions; layers are `tower` layers added in `main.rs`.\n\
+- Every page below is plain Markdown. All of them in one file: {}/llms-full.txt\n",
+        site()
+    );
+    let mut group = "";
+    for (p, lead) in all.iter().zip(leads) {
+        if p.group != group {
+            group = p.group;
+            out += &format!("\n## {group}\n\n");
+        }
+        let lead = lead.split_whitespace().collect::<Vec<_>>().join(" ");
+        out += &format!("- [{}]({}{}): {}\n", p.title, site(), md_href(p.id), lead.trim_end_matches('.'));
     }
     out
 }
@@ -449,6 +515,18 @@ fn main() {
         fs::create_dir_all(&dir).unwrap();
         fs::write(dir.join("index.html"), doc_page(&all, i, &raws[i], &metas[i], &rendered[i], &index_json)).unwrap();
     }
+    // Markdown twins of every page, llms.txt and llms-full.txt, for LLM agents.
+    let markdown: Vec<String> = all.iter().zip(&raws).zip(&metas).map(|((p, raw), meta)| page_markdown(&all, p, raw, meta)).collect();
+    for (p, md) in all.iter().zip(&markdown) {
+        let file = out.join(md_href(p.id).trim_start_matches('/'));
+        fs::create_dir_all(file.parent().unwrap()).unwrap();
+        fs::write(file, md).unwrap();
+    }
+    let leads: Vec<String> = rendered.iter().map(|r| strip_tags(&r.lead)).collect();
+    let llms = llms_txt(&all, &leads);
+    fs::write(out.join("llms.txt"), &llms).unwrap();
+    fs::write(out.join("llms-full.txt"), format!("{llms}\n---\n\n{}", markdown.join("\n---\n\n"))).unwrap();
+
     let urls: Vec<String> = std::iter::once("/".to_owned()).chain(all.iter().map(|p| href(p.id))).collect();
     fs::write(out.join("sitemap.xml"), sitemap(&urls)).unwrap();
     fs::write(out.join("robots.txt"), format!("User-agent: *\nAllow: /\n\nSitemap: {}/sitemap.xml\n", site())).unwrap();
@@ -456,6 +534,8 @@ fn main() {
     fs::write(out.join("favicon.svg"), include_str!("../assets/favicon.svg")).unwrap();
     fs::write(out.join("apple-touch-icon.png"), include_bytes!("../assets/apple-touch-icon.png")).unwrap();
     fs::write(out.join("og.png"), include_bytes!("../assets/og.png")).unwrap();
+    // Cloudflare static assets read `_headers`: Markdown and llms files as text.
+    fs::write(out.join("_headers"), include_str!("../assets/_headers")).unwrap();
     fs::write(out.join("site.css"), include_str!("../assets/site.css")).unwrap();
     fs::write(out.join("site.js"), include_str!("../assets/site.js")).unwrap();
     println!("built {} pages", all.len() + 1);

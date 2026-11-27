@@ -234,7 +234,7 @@ pub fn page(index_json: &str) -> String {
             r#"{{"@context":"https://schema.org","@type":"WebSite","name":"toolkit","url":{},"description":"Small Rust crates for server-driven web apps: routing, sessions, Inertia, queues and auth."}}"#,
             crate::json_str(&format!("{}/", crate::site()))
         ),
-    )
+    ).replace("</head>", "<link rel=\"alternate\" type=\"text/plain\" href=\"/llms.txt\" title=\"llms.txt\">\n</head>")
         + r##"<body class="home"><a class="skip" href="#main">Skip to content</a>"##
         + &nav("")
         + r#"<main id="main" class="page">"#

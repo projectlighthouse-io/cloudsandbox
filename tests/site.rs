@@ -47,6 +47,11 @@ async fn serves_seo_files() {
     assert!(status == StatusCode::OK && robots.contains("Sitemap: "), "robots.txt");
     let (status, sitemap) = get("/sitemap.xml").await;
     assert!(status == StatusCode::OK && sitemap.contains("/docs/crates/route/</loc>"), "sitemap lists the docs");
+    let (status, llms) = get("/llms.txt").await;
+    assert!(status == StatusCode::OK && llms.contains("/docs/crates/route.md"), "llms.txt links the Markdown pages");
+    let (status, md) = get("/docs/crates/route.md").await;
+    assert!(status == StatusCode::OK && md.starts_with("# route") && md.contains("- Version: "), "Markdown twin with metadata");
+    assert_eq!(get("/llms-full.txt").await.0, StatusCode::OK);
     for file in ["/og.png", "/favicon.svg", "/apple-touch-icon.png"] {
         assert_eq!(get(file).await.0, StatusCode::OK, "{file}");
     }

@@ -387,3 +387,6 @@ a.cell:hover,.tcell:hover{background:var(--tint)}
 /* ---------- beta badge next to a version ---------- */
 .metas .ver{font:inherit;font-family:var(--mono);font-style:normal}
 .metas .beta{display:table;margin:6px 0 0;padding:0 7px;font-style:normal;border:1px solid rgba(17,120,106,.35);border-radius:999px;background:var(--accent-soft);font-size:11px;font-weight:500;line-height:18px;color:var(--acc-text);vertical-align:1px}
+/* ---------- page actions: copy, Markdown, Open in Claude ---------- */
+.page-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+@media (max-width:640px){.page-actions{justify-content:flex-start}}
