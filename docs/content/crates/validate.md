@@ -118,3 +118,9 @@ e.check(&format!("tags.{i}"), required(tag));                            // each
 Rules never query the database. Run a check such as "this email is taken" in an
 action, and report the failure with `Errors::add` so it reaches the user the
 same way as every other error.
+
+## Things to know
+
+- A `Valid<T>` can only come from `Valid::check` (or the inputs that call it), so a handler taking `Valid<Json<T>>` never sees unchecked data.
+- With the `route` feature, `Errors` is a response: `422` with the field messages. Under Inertia it becomes a redirect back with the errors on the form.
+- Rules are plain functions returning `Result<(), Message>`; `.or_message("...")` replaces a rule's default message.

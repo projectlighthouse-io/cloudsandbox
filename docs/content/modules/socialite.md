@@ -244,3 +244,9 @@ pub trait Provider: Send + Sync {
 `OAuth2` also chooses how the client secret is sent to the token endpoint
 (`ClientAuth::Post` in the form, or `ClientAuth::Basic`) and whether PKCE is
 used.
+
+## Things to know
+
+- Enable one Cargo feature per provider (`google`, `github`, ...) plus `route` for the ready-made routes.
+- Bring the `Provider` trait into scope to call `authorize_url`, `user` and `social_user`.
+- Link accounts by email only when the provider verified it; the published `src/social.rs` enforces this.

@@ -125,3 +125,8 @@ pub trait Store: Send + Sync + 'static {
     fn fail(&self, id: JobId, error: &str, retry_at: Option<Timestamp>) -> impl Future<Output = Result<()>> + Send;
 }
 ```
+
+## Things to know
+
+- Jobs are claimed with `FOR UPDATE SKIP LOCKED` and a visibility deadline (5 minutes by default); a job that fails too often moves to `failed_jobs`. Times come from the database clock.
+- Create the tables with `art publish queue` (and `--driver` for SQLite or MySQL), then run workers with `queue:work`.

@@ -141,3 +141,9 @@ let logins = Limiter::new(throttle::PostgresStore::new(pool.clone()), FixedWindo
 Each hit runs in a short transaction that locks the key's row, so concurrent
 hits on one key are all counted. Expired keys are deleted by `throttle:prune`;
 schedule it, or run it now and then.
+
+## Things to know
+
+- `Limiter::memory(...)` counts per process; behind several servers use a SQL store so they share one count.
+- `throttle::by_ip` keys by the address `route::serve` records. Behind a proxy that is the proxy's address: key by a header your proxy sets instead.
+- `hit` counts a hit, `check` only looks. For login-style limits, `check` first, `hit` on failure and `clear` on success.

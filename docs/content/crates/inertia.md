@@ -107,3 +107,9 @@ is left out of the first render and fetched afterwards.
 With the `validate` feature, a validation failure on an Inertia visit redirects
 back with the `Errors` available as `props.errors`. Add the `session` feature to
 flash those errors across the redirect.
+
+## Things to know
+
+- Layer order: session, CSRF, auth, then Inertia (first added is outermost).
+- Props are any `Serialize` type; derive `ts_rs::TS` with `#[ts(export)]` to generate TypeScript types for the page.
+- Validation errors on an Inertia request become a redirect back with the errors flashed for the next page; a changed asset version answers `409` so the client reloads.

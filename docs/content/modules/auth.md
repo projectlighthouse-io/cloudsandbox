@@ -222,3 +222,10 @@ account, so it does not reveal who is registered. A successful reset signs out
 "remember me" devices and logs the user in. Until you connect a mailer, the
 published `send_reset_link` logs the link; set `APP_URL` so it points at your
 app.
+
+## Things to know
+
+- Add `auth::layer(users)` after the session and CSRF layers.
+- `Provider` (load a user by id) is the only required trait; `Credentials`, `Remember`, `Tokens` and `Resets` unlock `attempt`, "remember me", API tokens and password resets.
+- Bearer-token requests skip the session; exempt those API routes from CSRF.
+- Handlers and pages are app code: `art publish auth` (add `--with-ui` for Inertia pages) copies them into the app to edit.

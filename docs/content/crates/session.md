@@ -101,3 +101,9 @@ pub trait Store: Send + Sync + 'static {
 ```
 
 A driver for a new database is three hand-written queries.
+
+## Things to know
+
+- Add `session::layer(store, codec)` before the CSRF and auth layers; both read the session from the request.
+- SQL stores need their table: `art publish session` (add `--driver sqlite` or `--driver mysql`), then `art migrate`.
+- `MemoryStore` loses sessions on restart and is per process; use a SQL store in production.

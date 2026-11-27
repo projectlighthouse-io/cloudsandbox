@@ -206,3 +206,11 @@ Once built, the router is immutable and lookups take no lock.
 The route table is exported as data, so other tools can read it without the
 router depending on them. Run `art route:list` to see every method, path and
 name in your app.
+
+## Things to know
+
+- A handler is an async function taking one input: `fn(I)` or `fn(Cx<App>, I)`. To read several things, take a tuple of up to four inputs; only the last one may read the body (`Json`, `Form`, `Bytes`, `Multipart`).
+- Layers added first run outermost. Add the session layer before CSRF and auth, so they can use it.
+- `build()` refuses duplicate route names, duplicate method + path pairs and conflicting parameters, so a bad route table fails at startup, not at request time.
+- Bodies are limited to 2 MiB unless you raise it with `body_limit`; larger requests get `413` before your handler runs.
+- Route names are `&'static str`, or an enum implementing `route::Name` for compile-time checked names.

@@ -72,3 +72,7 @@ the failure.
 Crates that own data expose their commands behind a `command` feature. Add them
 to your registry alongside your own, as `route::command::list(&router)` does
 above.
+
+## Things to know
+
+- Commands are named `group:verb` and run from the app binary; `serve` runs when no command is given. `art` forwards unknown commands (`art route:list`) to the app.

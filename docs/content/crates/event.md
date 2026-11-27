@@ -84,3 +84,8 @@ have run by the time it returns, and queued listeners have been enqueued.
 
 The event-to-listener table is exported, so you can run `art event:list` to see
 which listeners react to each event.
+
+## Things to know
+
+- Listeners run inline, or queued as jobs. Queued listeners need explicit, stable names (`on_queued("notify_owner", f)`), stored with each job.
+- Emit with the app's context: `events.emit(&app, event)`.

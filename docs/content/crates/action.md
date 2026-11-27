@@ -80,3 +80,7 @@ You can call an action directly, or hand it to one of the adapters:
 
 An action that does not meet a requirement cannot be registered that way, and
 the compiler names the missing bound.
+
+## Things to know
+
+- `action` has no dependencies. The adapters live in the crates that run actions: `route::action` (feature `action`) for handlers and `command::action` for commands.

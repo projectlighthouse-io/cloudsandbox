@@ -79,3 +79,8 @@ Hashing and verifying take tens of milliseconds of CPU by design. In an async
 handler under load, run them on the blocking pool with
 `tokio::task::spawn_blocking`. `auth.attempt` and `auth::hash_password` already
 do.
+
+## Things to know
+
+- Hashing takes tens of milliseconds of CPU; call it through `tokio::task::spawn_blocking` (or `auth::hash_password`, which does).
+- When there is no user to check against, call `password::verify_none` so the response time does not reveal which accounts exist.

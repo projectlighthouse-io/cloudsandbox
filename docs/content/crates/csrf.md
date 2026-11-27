@@ -60,10 +60,16 @@ through the `TokenStore` trait:
 
 ```rust
 pub trait TokenStore {
-    fn token(&self) -> Option<Token>;
-    fn set_token(&mut self, token: Token);
+    fn token(&self) -> Option<String>;
+    fn set_token(&mut self, token: String);
 }
 ```
 
 `session` implements this trait, so with sessions in place there is nothing more
 to write. The token is rotated whenever the session id is regenerated.
+
+## Things to know
+
+- Add the CSRF layer after the session layer. Unsafe methods must send the token in `X-XSRF-TOKEN` (the Inertia client does this from the `XSRF-TOKEN` cookie) or, for a plain HTML form, a `_token` field.
+- A failed check is a bare `419`. Exempt webhook routes by name: `csrf::layer::<Session>().except(["webhooks.github"])`. Routes authenticated by bearer token should be exempt too.
+- When a handler rotates the session (login, logout), the new token is sent on that same response.

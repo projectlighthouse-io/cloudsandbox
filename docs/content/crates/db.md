@@ -92,3 +92,8 @@ Calling `singleton()` on a slot that was never set panics with the handle name:
 it is a startup bug, not a runtime condition. Calling `set_singleton` twice for
 the same handle also panics, because a singleton is set once and never
 replaced.
+
+## Things to know
+
+- Declare a handle per database with `db::handle!(pub Primary: Postgres)`; `Db<Primary>` and `Db<Analytics>` are different types, so they cannot be mixed up.
+- `tx(async |tx| ...)` commits when the closure returns `Ok` and rolls back otherwise.

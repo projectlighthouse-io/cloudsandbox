@@ -52,3 +52,7 @@ browsers do not close an idle connection.
 When the client disconnects, the stream is dropped and the subscription ends
 with it. No task outlives its connection, so you do not need to clean up
 yourself.
+
+## Things to know
+
+- An event stream is an ordinary response from an ordinary handler; keep-alive comments are sent for you, and a reconnecting client's `Last-Event-ID` is available as an input.

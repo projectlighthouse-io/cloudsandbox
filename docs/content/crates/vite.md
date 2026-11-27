@@ -56,3 +56,7 @@ serving a broken page.
 When the hot file exists, Vite is running in dev mode and the tags point at the
 dev server. The hot file is checked on every request, so you can start or stop
 Vite without restarting your app.
+
+## Things to know
+
+- `Vite::load("public", &["resources/js/app.ts"])` works before the first build: in development the `public/hot` file written by the dev server takes over.

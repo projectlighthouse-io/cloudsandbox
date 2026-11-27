@@ -66,3 +66,7 @@ in a log line by accident.
 A codec can hold several keys. It decodes with any of them and always encodes
 with the newest, so you can introduce a new key without invalidating cookies
 that are already out there.
+
+## Things to know
+
+- Build a `Codec` from the app key: `Codec::new(Keys::parse(&cfg.app_key)?)`. Generate a key with `art key:generate`; never commit it.
