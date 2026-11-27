@@ -1,5 +1,5 @@
 ---
-builds_on: `session` (to hold `state` and the PKCE verifier between redirect and callback)
+builds_on: `session` (to hold `state` and the PKCE verifier between redirect and callback), `reqwest`
 phase: 3
 ---
 
@@ -9,183 +9,159 @@ OAuth login with third-party providers.
 
 ## Introduction
 
-Letting users sign in with an account they already have, such as GitHub, means
-speaking OAuth. `socialite` handles the protocol for you: it builds the
-redirect to the provider with `state` and PKCE, and when the provider sends the
-user back, it checks `state`, exchanges the code and fetches the profile. You
-get back a normalised `SocialUser`. Each provider is a driver behind a feature.
+Letting users sign in with an account they already have, such as Google or
+GitHub, means speaking OAuth. `socialite` handles the protocol for you: it
+builds the redirect to the provider with a `state` value and PKCE, and when the
+provider sends the user back, it checks `state`, exchanges the code and fetches
+the profile. You get back the provider's own user type, or one `SocialUser`
+shape that looks the same for every provider.
 
-What happens next is up to your app. `socialite` does not log anyone in: you
-map the `SocialUser` to your own user and call `auth.login`. It does not create
-or link accounts, because that policy belongs to you. Provider tokens are not
-stored either; they are returned to your app, which decides what to do with
-them.
+What happens next is up to your app. `socialite` does not log anyone in and
+does not store accounts: you map the user to your own and call `auth.login`.
+Provider tokens are handed to your app, which decides what to do with them.
 
 `socialite` builds on `session`, which holds `state` and the PKCE verifier
-between the redirect and the callback. It uses the `oauth2` crate for the
-protocol and an HTTP client for the profile request. It has no dependency on
-`auth`.
+between the redirect and the callback. It has no dependency on `auth`.
 
 ## Installation
 
-Add the module from git, with the driver for each provider you need:
+Add the module from git with a feature for each provider you use. Only those
+providers are compiled:
 
 ```toml
 [dependencies]
-socialite = { git = "https://github.com/projectlighthouse-io/cloudfoundry" }
+socialite = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["google", "github"] }
 ```
 
-| Feature | Adds |
-| --- | --- |
-| `github` | GitHub driver |
-| `google` | Google driver |
-| `gitlab` | GitLab driver |
-
-GitHub is the only driver written first, since the CI app needs it.
-
-The redirect and callback handlers are app code. Run `art publish socialite`
-to copy them into `src/handlers/social.rs`, where the account-linking policy
-and the redirect target are yours to change.
+| Feature | Provider | Email |
+| --- | --- | --- |
+| `github` | `GitHub` | Public profile email, if the user shows one |
+| `gitlab` | `GitLab`, on gitlab.com or self-hosted | Yes, with a verified flag |
+| `google` | `Google` | Yes, with a verified flag |
+| `reddit` | `Reddit` | No |
+| `twitter` | `Twitter` (X) | No |
+| `oidc` | `Oidc`: any OpenID Connect provider (Okta, Keycloak, Azure AD, ...) | Yes, with a verified flag |
+| `auth0` | `Auth0` (turns on `oidc`) | Yes, with a verified flag |
 
 ## Configuring a provider
 
-Create a driver with your client credentials and the URL of your callback
-route, then choose the scopes you need:
+Create the provider once at startup with your client credentials and the URL
+of your callback route, and keep it in your app state:
 
 ```rust
-use socialite::github::{GitHub, Scope};
+use socialite::{GitHub, Google};
 
-let github = GitHub::new(
-    cfg.github_client_id,     // ClientId
-    cfg.github_client_secret, // ClientSecret
-    app.url("auth.github.callback", &[])?,
-).scopes([Scope::ReadUser, Scope::UserEmail]);
+let google = Google::new(&cfg.google_client_id, &cfg.google_client_secret, "https://myapp.com/auth/google/callback");
+let github = GitHub::new(&cfg.github_client_id, &cfg.github_client_secret, "https://myapp.com/auth/github/callback")
+    .scopes(&["read:user"]);
 ```
 
-`ClientId` and `ClientSecret` are distinct types, so the two arguments cannot
-be swapped. Your config produces them when it reads the environment.
-`ClientSecret` has no `Debug` output.
+Each provider starts with sensible scopes (`openid email profile` for Google,
+GitLab and OpenID Connect; `identity` for Reddit; `users.read tweet.read` for
+X), and `.scopes(...)` replaces them.
 
-### Scopes
-
-Scopes are an enum per provider, so a GitHub scope cannot be passed to Google
-and a typo does not compile:
+Some providers take a few extra options:
 
 ```rust
-pub enum Scope {
-    ReadUser,
-    UserEmail,
-    ReadOrg,
-    Repo,
-    /// Escape hatch for a scope this enum does not list yet.
-    Other(&'static str),
-}
+Google::new(id, secret, callback)
+    .hosted_domain("acme.com")      // only accounts of this Google Workspace domain
+    .offline()                       // ask for a refresh token
+    .prompt("select_account");       // always show the account picker
+
+GitLab::new(id, secret, callback).base_url("https://gitlab.example.com");     // self-hosted
+Reddit::new(id, secret, callback).user_agent("web:myapp:v1.0 (by /u/me)");   // Reddit asks for one
+
+let okta = Oidc::discover("okta", "https://acme.okta.com", id, secret, callback).await?;  // reads the discovery document
+let auth0 = Auth0::new("acme.eu.auth0.com", id, secret, callback);
 ```
 
-Each scope enum keeps an `Other` variant. Providers add scopes faster than a
-library releases, and your app should never be blocked waiting for one.
+`hosted_domain` is checked against the user Google returns, not just passed to
+Google as a hint, because a hint can be removed from the URL.
 
 ## Redirecting and handling the callback
 
 Two handlers complete the flow: one sends the user to the provider, and one
-receives them when they come back. These are the published handlers in
-`src/handlers/social.rs`:
+receives them when they come back. Both are your app's code. Bring the
+`Provider` trait into scope to call the flow methods:
 
 ```rust
-// src/handlers/social.rs (published, then owned by the app)
-async fn redirect(cx: Cx<App>, session: Session) -> Result<Redirect, AppError> {
-    Ok(cx.github.redirect(&session)?)
+use socialite::{Callback, Provider};
+
+// GET /auth/google
+async fn redirect(cx: Cx<App>, session: Session) -> Redirect {
+    Redirect::to(cx.google.authorize_url(&session))
 }
 
-async fn callback(
-    cx: Cx<App>,
-    (session, auth, query): (Session, Auth<User>, Query<Callback>),
-) -> Result<Redirect, AppError> {
-    let social: SocialUser<GitHub> = cx.github.user(&session, query.0).await?;
-
-    let user = match cx.users.find_by_social(&social).await? {
-        Some(user) => user,
-        None => cx.users.create(NewUser::from(&social)).await?,
-    };
+// GET /auth/google/callback
+async fn callback(cx: Cx<App>, (auth, session, Query(cb)): (Auth<User>, Session, Query<Callback>)) -> Result<Redirect, AppError> {
+    let social = cx.google.social_user(&session, cb).await?;
+    let user = cx.users.find_or_create_social(&social).await?;
     auth.login(&user);
-
     Ok(Redirect::to_route("dashboard"))
 }
 ```
 
-The `state` value is random, single use, and compared in constant time. A
-callback without a matching `state` in the session is rejected. PKCE is always
-on for providers that support it.
+`authorize_url` stores a random `state` and a PKCE verifier in the session.
+The callback checks `state` in constant time and uses it once, so a forged or
+replayed callback fails with `Error::State`. PKCE (`S256`) is on for every
+provider that accepts it; Reddit does not, so it is off there.
+
+If the user declines, or the provider reports an error, you get
+`Error::Denied`. A network or decoding failure is `Error::Http`.
 
 ## The social user
 
-The callback gives you a `SocialUser`:
+`user(&session, cb)` returns the provider's own type (`GoogleUser`,
+`GitHubUser`, `OidcUser`, ...), with every field that provider reports.
+`social_user` returns the same user in one shape for all providers:
 
 ```rust
-pub struct SocialUser<P: Provider> {
-    pub id: String,
+pub struct SocialUser {
+    pub provider: &'static str,      // "google", "github", or the name you gave an Oidc provider
+    pub id: String,                  // the provider's stable id for this user
     pub name: Option<String>,
     pub email: Option<String>,
-    pub email_verified: bool,
+    pub email_verified: Option<bool>, // None when the provider does not say
     pub avatar: Option<String>,
-    pub token: Token, // access token, optional refresh token, expiry
-    provider: PhantomData<P>,
-}
-
-impl<P: Provider> SocialUser<P> {
-    /// The provider's stable name, for storing in a database column.
-    pub fn provider(&self) -> &'static str { P::NAME }
+    pub token: String,
+    pub refresh_token: Option<String>,
 }
 ```
 
-`email_verified` is reported exactly as the provider states it. Never link
-accounts by an unverified email address. Tokens have no `Debug` output.
+Store `(provider, id)` to recognise a returning user: emails can change, the
+provider's id does not. Reddit and X share no email address, so for them
+`email` is always `None`.
 
-The provider is part of the type: `SocialUser<GitHub>` and `SocialUser<Google>`
-are different types. A lookup written for GitHub accounts cannot be handed a
-Google user:
+`OidcUser::claims` keeps every claim the provider returned as JSON, for custom
+ones such as groups or roles.
+
+## Several OpenID Connect providers
+
+The first argument to `Oidc::new` and `Oidc::discover` is the provider's name.
+It keys the session values and becomes `SocialUser::provider`, so one app can
+offer several OpenID Connect providers side by side:
 
 ```rust
-async fn find_by_social(&self, social: &SocialUser<GitHub>) -> Result<Option<User>, AppError>
+let okta = Oidc::discover("okta", "https://acme.okta.com", ...).await?;
+let keycloak = Oidc::discover("keycloak", "https://sso.acme.com/realms/main", ...).await?;
 ```
-
-## Finding and creating users
-
-Finding and creating users stay separate, and neither belongs to this module.
-`find_by_social` is a query in your app, and it only reads. `create` is your
-app's ordinary database function for inserting a user: it takes a `NewUser`
-and knows nothing about OAuth. The mapping between the two is one
-`From<&SocialUser<GitHub>> for NewUser` in your app. Your callback handler
-decides whether a missing user is created, rejected or sent to a sign-up page.
-
-### Working with any provider
-
-Code that handles any provider is generic, and reads the provider's name from
-the type:
-
-```rust
-async fn link<P: Provider>(&self, user: &User, social: &SocialUser<P>) -> Result<(), AppError> {
-    // insert (user.id, social.provider(), social.id)
-}
-```
-
-This is a type parameter rather than a `ProviderKind` enum on purpose. An enum
-would have to list every provider inside this module, so a third-party driver
-could not exist without an `Other` variant, which is a string again.
 
 ## Adding a provider
 
-A driver is the provider's endpoints plus one profile request. You can add a
-provider without touching this module by implementing `Provider`:
+A provider is its endpoints plus one profile request. Implement `Provider`
+in your app, and the redirect, `state`, PKCE and code exchange come for free:
 
 ```rust
-pub trait Provider: Send + Sync + 'static {
-    const NAME: &'static str;
-    type Scope: AsRef<str>;
+pub trait Provider: Send + Sync {
+    type User: Into<SocialUser> + Send;
 
-    fn endpoints(&self) -> Endpoints;
-    fn fetch_user(&self, token: &Token) -> impl Future<Output = Result<SocialUser<Self>>> + Send
-    where
-        Self: Sized;
+    fn name(&self) -> &'static str;
+    fn oauth(&self) -> &OAuth2;                                   // credentials, endpoints, scopes
+    fn extra_params(&self) -> Vec<(&'static str, String)> { ... }  // optional authorize parameters
+    fn fetch_user(&self, token: Token) -> impl Future<Output = Result<Self::User, Error>> + Send;
 }
 ```
+
+`OAuth2` also chooses how the client secret is sent to the token endpoint
+(`ClientAuth::Post` in the form, or `ClientAuth::Basic`) and whether PKCE is
+used.

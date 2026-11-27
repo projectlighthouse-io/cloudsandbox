@@ -203,8 +203,8 @@ pub fn mock(id: &str) -> String {
             "A password hashed with Argon2id and verified",
         ),
         "socialite" => frame(
-            &(bar("GitHub login", "")
-                + &stepper(&[("Redirect", "state and PKCE stored in session"), ("Authorize", "github.com/login/oauth"), ("Callback", "state matches, code exchanged"), ("SocialUser&lt;GitHub&gt;", "elizabeth · email verified")])),
+            &(bar("Google login", "")
+                + &stepper(&[("Redirect", "state and PKCE stored in session"), ("Authorize", "accounts.google.com"), ("Callback", "state matches, code exchanged"), ("SocialUser", "google · elizabeth · email verified")])),
             "steps",
             1100,
             "The OAuth redirect and callback flow ending in a typed user",

@@ -212,7 +212,7 @@ pub fn page(index_json: &str) -> String {
         t_shut = t("worker", "Stops without losing work", "On shutdown a worker stops claiming, finishes what it holds, then exits. Dead workers' jobs return."),
         s5 = strip("05", "Auth and data", "auth", false),
         f_auth = feature("auth", "Login that is hard to get wrong", "Logging in always regenerates the session. Authed&lt;User&gt; cannot exist for an anonymous request."),
-        f_socialite = feature("socialite", "OAuth with typed providers", "State and PKCE are handled for you. The result is SocialUser&lt;GitHub&gt;, never a provider string."),
+        f_socialite = feature("socialite", "Sign in with seven providers", "GitHub, GitLab, Google, Reddit, X, Auth0 and any OpenID Connect provider, each behind a feature. State and PKCE are handled for you."),
         f_password = feature("password", "Argon2id by default", "Hashing runs off the async runtime, and old hashes report when they should be upgraded."),
         f_db = feature("db", "Databases you cannot mix up", "Each pool has its own type over sqlx. Passing the wrong one is a compile error, not an incident."),
         t_publish = t("art publish", "Published, then yours", "Login and OAuth handlers are copied into your app once, so redirects and logging are yours to change."),
