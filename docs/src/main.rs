@@ -1,9 +1,9 @@
 //! Builds the toolkit docs site: landing page plus one reference page per component.
 //! Reads `content/`, writes `dist/`. Run with `cargo run --manifest-path docs/Cargo.toml`.
 
-mod hl;
+mod highlight;
 mod landing;
-mod md;
+mod markdown;
 mod mocks;
 
 use std::fmt::Write as _;
@@ -50,11 +50,11 @@ pub fn href(id: &str) -> String {
 
 /// Python's `html.escape(t, quote=True)`.
 fn esc(t: &str) -> String {
-    hl::esc(t).replace('"', "&quot;").replace('\'', "&#x27;")
+    highlight::esc(t).replace('"', "&quot;").replace('\'', "&#x27;")
 }
 
 fn strip_tags(t: &str) -> String {
-    md::unescape(&md::strip_tags(t)).trim().to_string()
+    markdown::unescape(&markdown::strip_tags(t)).trim().to_string()
 }
 
 fn first_chars(s: &str, n: usize) -> &str {
@@ -203,7 +203,7 @@ fn side(active: &str) -> String {
     out
 }
 
-fn doc_page(all: &[Page], i: usize, raw: &str, meta: &(String, String), r: &md::Rendered, index_json: &str) -> String {
+fn doc_page(all: &[Page], i: usize, raw: &str, meta: &(String, String), r: &markdown::Rendered, index_json: &str) -> String {
     let p = &all[i];
     let is_comp = p.id != "docs";
     let body = &r.body;
@@ -293,7 +293,7 @@ fn main() {
     let links: Vec<(&str, String)> = all.iter().map(|p| (p.src.as_str(), href(p.id))).collect();
     let links: Vec<(&str, &str)> = links.iter().map(|(s, o)| (*s, o.as_str())).collect();
     let (metas, raws): (Vec<_>, Vec<_>) = all.iter().map(|p| front_matter(&fs::read_to_string(root.join("content").join(&p.src)).unwrap())).unzip();
-    let rendered: Vec<md::Rendered> = all.iter().zip(&raws).map(|(p, raw)| md::render(raw, &p.src, &links)).collect();
+    let rendered: Vec<markdown::Rendered> = all.iter().zip(&raws).map(|(p, raw)| markdown::render(raw, &p.src, &links)).collect();
 
     let items: Vec<String> = all
         .iter()

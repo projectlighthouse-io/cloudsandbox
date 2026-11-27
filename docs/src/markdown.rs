@@ -1,7 +1,7 @@
 //! Markdown to HTML in the shape Python-Markdown writes it (block per line,
 //! tables one tag per line, ids on every heading), which the design was built from.
 
-use crate::hl;
+use crate::highlight;
 use pulldown_cmark::{CodeBlockKind, Event, HeadingLevel, Options, Parser, Tag, TagEnd};
 
 pub struct Rendered {
@@ -156,15 +156,15 @@ pub fn render(text: &str, src: &str, pages: &[(&str, &str)]) -> Rendered {
             Event::End(TagEnd::CodeBlock) => {
                 let (lang, text) = code.take().unwrap();
                 html.push_str("<div class=\"code\"><button type=\"button\" class=\"copy\">Copy</button>");
-                html.push_str(&hl::block(&text, &lang));
+                html.push_str(&highlight::block(&text, &lang));
                 html.push_str("</div>\n\n");
             }
             Event::Text(t) if code.is_some() => code.as_mut().unwrap().1.push_str(&t),
-            Event::Text(t) => html.push_str(&hl::esc(&t)),
+            Event::Text(t) => html.push_str(&highlight::esc(&t)),
             Event::Code(_) => {
                 // from the source: Python-Markdown keeps a wrapped span's newline and indent
                 let raw = text[range].trim_matches('`').trim();
-                html.push_str(&format!("<code>{}</code>", hl::esc(raw)));
+                html.push_str(&format!("<code>{}</code>", highlight::esc(raw)));
             }
             Event::Html(t) | Event::InlineHtml(t) => html.push_str(&t),
             Event::SoftBreak => {
