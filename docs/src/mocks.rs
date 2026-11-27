@@ -209,6 +209,13 @@ pub fn mock(id: &str) -> String {
             1100,
             "The OAuth redirect and callback flow ending in a typed user",
         ),
+        "teams" => frame(
+            &(bar("Acme · Platform", "")
+                + &stepper(&[("Organization", "Acme · you are an admin"), ("Team", "Platform · owner through Acme"), ("Invite", "ada@acme.dev as member"), ("Can<InviteMembers>", "admin · granted")])),
+            "steps",
+            1100,
+            "An organization admin inviting a member to one of its teams",
+        ),
         _ => unreachable!("no mock for {id}"),
     }
 }
