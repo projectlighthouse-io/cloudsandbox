@@ -421,6 +421,8 @@ fn page_markdown(all: &[Page], p: &Page, raw: &str, meta: &(String, String)) -> 
         }
     }
     let mut body = format!("{title}\n\n{lead}\n\n{}\n\n{rest}\n", info.join("\n"));
+    // Agents may read this file anywhere: make root-relative links absolute.
+    body = body.replace("](/", &format!("]({}/", site()));
     for q in all {
         let file = q.src.rsplit('/').next().unwrap_or(&q.src);
         body = body.replace(&format!("]({file})"), &format!("]({}{})", site(), md_href(q.id)));

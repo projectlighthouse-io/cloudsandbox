@@ -107,3 +107,17 @@ impl From<&Run> for RunView { /* ... */ }
 ```
 
 This keeps your rows out of responses without adding any new abstraction.
+
+## Working with AI agents
+
+The docs are written to be read by coding agents as well as people:
+
+- [llms.txt](/llms.txt) describes the toolkit and links every page as Markdown;
+  [llms-full.txt](/llms-full.txt) is all of it in one file.
+- Every page has a Markdown version: add `.md` to its address, for example
+  `/docs/crates/route.md`, or use the **Markdown** and **Open in Claude** buttons at the top
+  of the page.
+- `art new` writes an `AGENTS.md` into your app, with a `CLAUDE.md` that imports it. It
+  describes the layout, the `art` commands and the rules above, and links the docs.
+  `art publish <crate>` adds that crate's notes. Codex, Cursor and Claude Code read it
+  automatically, so an agent working in your app starts from the same conventions you do.

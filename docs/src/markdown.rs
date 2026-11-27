@@ -63,7 +63,8 @@ fn slug(text: &str) -> String {
 
 /// Rewrites a link target relative to `src` into a site page, `None` to drop the link.
 fn link(target: &str, src: &str, pages: &[(&str, &str)]) -> Option<String> {
-    if target.starts_with("http://") || target.starts_with("https://") || target.starts_with('#') {
+    // Absolute URLs, anchors and root-relative site files (`/llms.txt`) pass through.
+    if target.starts_with("http://") || target.starts_with("https://") || target.starts_with('#') || target.starts_with('/') {
         return Some(target.to_string());
     }
     let (path, frag) = target.split_once('#').map_or((target, ""), |(p, f)| (p, f));
