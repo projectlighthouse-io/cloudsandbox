@@ -142,7 +142,7 @@ pub fn page(index_json: &str) -> String {
 <section class="hero"><div class="hero-tex" aria-hidden="true"></div><div class="rail-box hero-in">
 <a class="pill reveal" href="/docs/"><span class="pill-ic">{layers}</span>Built with DevEx in mind<span class="pill-arrow">{arrow}</span></a>
 <h1 class="reveal">Opinionated Rust batteries.</h1>
-<p class="sub reveal">Routing, sessions, Inertia pages, queues and auth as small crates on plain <code>http</code> and <code>tower</code> types. Take one, or build a whole app.</p>
+<p class="sub reveal">A set of composable Rust crates for HTTP-based applications, with strict types and little boilerplate.</p>
 <div class="ctas reveal"><a class="btn btn-ink btn-lg" href="/docs/">{CTA}</a><a class="btn btn-line btn-lg" href="#parts">Browse components</a></div>
 {win}
 </div></section>
