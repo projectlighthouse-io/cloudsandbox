@@ -1,6 +1,6 @@
 ---
 builds_on: Nothing
-phase: 2
+version: 0.1.0
 ---
 
 # action

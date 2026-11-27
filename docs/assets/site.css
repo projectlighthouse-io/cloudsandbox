@@ -384,3 +384,6 @@ a.cell:hover,.tcell:hover{background:var(--tint)}
 .prose .callout-title{margin:0 0 6px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#b8352d}
 .prose .callout p:last-child{margin-bottom:0}
 .prose .callout code{background:rgba(214,69,61,.1)}
+/* ---------- beta badge next to a version ---------- */
+.metas .ver{font:inherit;font-family:var(--mono);font-style:normal}
+.metas .beta{display:table;margin:6px 0 0;padding:0 7px;font-style:normal;border:1px solid rgba(17,120,106,.35);border-radius:999px;background:var(--accent-soft);font-size:11px;font-weight:500;line-height:18px;color:var(--acc-text);vertical-align:1px}

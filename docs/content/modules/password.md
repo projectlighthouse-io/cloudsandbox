@@ -1,6 +1,6 @@
 ---
 builds_on: The RustCrypto `argon2` crate
-phase: 3
+version: 0.1.0
 ---
 
 # password

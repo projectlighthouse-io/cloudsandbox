@@ -1,6 +1,6 @@
 ---
 builds_on: `serde`, `serde_json`, `tokio`
-phase: 5
+version: 0.1.0
 ---
 
 # queue

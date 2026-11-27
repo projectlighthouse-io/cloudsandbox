@@ -1,6 +1,6 @@
 ---
 builds_on: `session`, `route`, `password`; `throttle` for login limits
-phase: 3
+version: 0.1.0
 ---
 
 # auth

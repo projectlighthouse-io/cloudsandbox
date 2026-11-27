@@ -201,13 +201,14 @@ fn tail(index_json: &str) -> String {
 }
 
 /// Splits `---\nkey: value\n---\n` front matter off a page, returning (builds on, phase) and the Markdown.
+/// Splits front matter off a page: (builds on, version) and the Markdown.
 fn front_matter(raw: &str) -> ((String, String), String) {
     let Some(rest) = raw.strip_prefix("---\n") else { return (Default::default(), raw.to_string()) };
     let (head, body) = rest.split_once("\n---\n").expect("unclosed front matter");
     let get = |key: &str| {
         head.lines().find_map(|l| l.strip_prefix(key)?.strip_prefix(':')).map_or(String::new(), |v| v.trim().to_string())
     };
-    ((get("builds_on"), get("phase")), body.trim_start_matches('\n').to_string())
+    ((get("builds_on"), get("version")), body.trim_start_matches('\n').to_string())
 }
 
 fn code_spans(t: &str) -> String {
@@ -245,10 +246,13 @@ fn doc_page(all: &[Page], i: usize, raw: &str, meta: &(String, String), r: &mark
     let toc = &r.toc;
     let mut meta_cells = String::new();
     if is_comp {
-        let (deps, phase) = meta;
+        let (deps, version) = meta;
+        // The crate's `version` in its Cargo.toml. Everything is beta while it is 0.x.
+        assert!(!version.is_empty(), "{}: front matter needs `version:` (the crate's Cargo.toml version)", p.src);
+        let version = if version.starts_with("0.") { format!(r#"<em class="ver">{version}</em><em class="beta">beta</em>"#) } else { format!(r#"<em class="ver">{version}</em>"#) };
         let kind = if MODULES.contains(&p.id) { "Module" } else { "Crate" };
         meta_cells = format!(
-            r#"<div class="metas"><div><span class="mono">Kind</span><b>{kind}</b></div><div><span class="mono">Area</span><b>{}</b></div><div><span class="mono">Phase</span><b>{phase}</b></div><div class="wide"><span class="mono">Builds on</span><b>{}</b></div></div>"#,
+            r#"<div class="metas"><div><span class="mono">Kind</span><b>{kind}</b></div><div><span class="mono">Area</span><b>{}</b></div><div><span class="mono">Version</span><b>{version}</b></div><div class="wide"><span class="mono">Builds on</span><b>{}</b></div></div>"#,
             p.group,
             code_spans(&esc(&deps))
         );

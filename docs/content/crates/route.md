@@ -1,6 +1,6 @@
 ---
 builds_on: `http`, `tower`, `matchit` (radix-tree path matching), `serde` for typed parameters
-phase: 1
+version: 0.1.0
 ---
 
 # route

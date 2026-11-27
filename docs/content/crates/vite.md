@@ -1,6 +1,6 @@
 ---
 builds_on: `serde_json`
-phase: 4
+version: 0.1.0
 ---
 
 # vite

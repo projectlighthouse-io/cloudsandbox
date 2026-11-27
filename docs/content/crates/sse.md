@@ -1,6 +1,6 @@
 ---
 builds_on: `http`, `http-body`, `tokio`, `futures-core`
-phase: 5
+version: 0.1.0
 ---
 
 # sse

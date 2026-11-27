@@ -1,6 +1,6 @@
 ---
 builds_on: `session` (to hold `state` and the PKCE verifier between redirect and callback), `reqwest`
-phase: 3
+version: 0.1.0
 ---
 
 # socialite

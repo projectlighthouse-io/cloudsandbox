@@ -1,6 +1,6 @@
 ---
 builds_on: An AEAD crate and an HMAC crate from RustCrypto
-phase: 3
+version: 0.1.0
 ---
 
 # securecookie

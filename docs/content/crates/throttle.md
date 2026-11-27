@@ -1,6 +1,6 @@
 ---
 builds_on: `tokio` for `wait`; `route` and `tower` for the middleware; `sqlx` for the SQL stores
-phase: 6
+version: 0.1.0
 ---
 
 # throttle

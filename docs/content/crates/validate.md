@@ -1,6 +1,6 @@
 ---
 builds_on: `serde` for serialising `Errors`
-phase: 2
+version: 0.1.0
 ---
 
 # validate
