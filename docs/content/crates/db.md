@@ -1,6 +1,6 @@
 ---
 builds_on: `sqlx`, with one database feature
-version: 0.1.0
+version: 0.2.0
 ---
 
 # db
@@ -81,17 +81,17 @@ fields. That keeps tests isolated.
 The `singleton` feature adds one process-wide slot per handle type:
 
 ```rust
-Db::<Primary>::set_singleton(primary); // once, at startup
-let db = Db::<Primary>::singleton();    // anywhere
+Db::<Primary>::set_singleton(primary)?; // once, at startup
+let db = Db::<Primary>::singleton()?;    // anywhere
 ```
 
 With one handle, that slot is a singleton. With several handles it is a
 multiton, still type-checked per handle.
 
-Calling `singleton()` on a slot that was never set panics with the handle name:
-it is a startup bug, not a runtime condition. Calling `set_singleton` twice for
-the same handle also panics, because a singleton is set once and never
-replaced.
+Both return a `SingletonError` that names the handle instead of panicking.
+`singleton()` on a slot that was never set returns `NotSet`. Calling
+`set_singleton` twice returns `AlreadySet` and keeps the first handle, because a
+singleton is set once and never replaced.
 
 ## Things to know
 
