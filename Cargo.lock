@@ -5,7 +5,7 @@ version = 4
 [[package]]
 name = "action"
 version = "0.1.0"
-source = "git+https://github.com/projectlighthouse-io/cloudfoundry#3f445076150cd1050d5a720f5d9ee29938133cfb"
+source = "git+https://github.com/projectlighthouse-io/toolkit#5fbac658b99b21c7376fecee51f2bd939636a620"
 
 [[package]]
 name = "aead"
@@ -257,7 +257,7 @@ checksum = "1d07550c9036bf2ae0c684c4297d503f838287c83c53686d05370d0e139ae570"
 [[package]]
 name = "command"
 version = "0.1.0"
-source = "git+https://github.com/projectlighthouse-io/cloudfoundry#3f445076150cd1050d5a720f5d9ee29938133cfb"
+source = "git+https://github.com/projectlighthouse-io/toolkit#5fbac658b99b21c7376fecee51f2bd939636a620"
 dependencies = [
  "action",
  "clap",
@@ -322,7 +322,7 @@ dependencies = [
 [[package]]
 name = "db"
 version = "0.1.0"
-source = "git+https://github.com/projectlighthouse-io/cloudfoundry#3f445076150cd1050d5a720f5d9ee29938133cfb"
+source = "git+https://github.com/projectlighthouse-io/toolkit#5fbac658b99b21c7376fecee51f2bd939636a620"
 dependencies = [
  "sqlx",
 ]
@@ -406,7 +406,7 @@ dependencies = [
 [[package]]
 name = "event"
 version = "0.1.0"
-source = "git+https://github.com/projectlighthouse-io/cloudfoundry#3f445076150cd1050d5a720f5d9ee29938133cfb"
+source = "git+https://github.com/projectlighthouse-io/toolkit#5fbac658b99b21c7376fecee51f2bd939636a620"
 dependencies = [
  "clap",
  "queue",
@@ -1183,7 +1183,7 @@ dependencies = [
 [[package]]
 name = "queue"
 version = "0.1.0"
-source = "git+https://github.com/projectlighthouse-io/cloudfoundry#3f445076150cd1050d5a720f5d9ee29938133cfb"
+source = "git+https://github.com/projectlighthouse-io/toolkit#5fbac658b99b21c7376fecee51f2bd939636a620"
 dependencies = [
  "clap",
  "serde",
@@ -1276,7 +1276,7 @@ checksum = "d902046e6a28a1e4c3cab97258a0ce11e994903f01c2d97a9447a0b3df85f4f6"
 [[package]]
 name = "route"
 version = "0.1.0"
-source = "git+https://github.com/projectlighthouse-io/cloudfoundry#3f445076150cd1050d5a720f5d9ee29938133cfb"
+source = "git+https://github.com/projectlighthouse-io/toolkit#5fbac658b99b21c7376fecee51f2bd939636a620"
 dependencies = [
  "action",
  "bytes",
@@ -1331,7 +1331,7 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 [[package]]
 name = "securecookie"
 version = "0.1.0"
-source = "git+https://github.com/projectlighthouse-io/cloudfoundry#3f445076150cd1050d5a720f5d9ee29938133cfb"
+source = "git+https://github.com/projectlighthouse-io/toolkit#5fbac658b99b21c7376fecee51f2bd939636a620"
 dependencies = [
  "base64",
  "chacha20poly1305",
@@ -1400,7 +1400,7 @@ dependencies = [
 [[package]]
 name = "session"
 version = "0.1.0"
-source = "git+https://github.com/projectlighthouse-io/cloudfoundry#3f445076150cd1050d5a720f5d9ee29938133cfb"
+source = "git+https://github.com/projectlighthouse-io/toolkit#5fbac658b99b21c7376fecee51f2bd939636a620"
 dependencies = [
  "base64",
  "clap",

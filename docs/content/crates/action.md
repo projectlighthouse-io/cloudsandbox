@@ -24,7 +24,7 @@ Add the crate from git:
 
 ```toml
 [dependencies]
-action = { git = "https://github.com/projectlighthouse-io/cloudfoundry" }
+action = { git = "https://github.com/projectlighthouse-io/toolkit" }
 ```
 
 ## The trait

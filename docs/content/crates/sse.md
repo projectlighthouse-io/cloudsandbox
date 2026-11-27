@@ -25,7 +25,7 @@ Add the crate from git:
 
 ```toml
 [dependencies]
-sse = { git = "https://github.com/projectlighthouse-io/cloudfoundry" }
+sse = { git = "https://github.com/projectlighthouse-io/toolkit" }
 ```
 
 ## Streaming events

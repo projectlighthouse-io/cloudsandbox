@@ -29,7 +29,7 @@ Add the module from git:
 
 ```toml
 [dependencies]
-password = { git = "https://github.com/projectlighthouse-io/cloudfoundry" }
+password = { git = "https://github.com/projectlighthouse-io/toolkit" }
 ```
 
 ## Hashing and verifying passwords

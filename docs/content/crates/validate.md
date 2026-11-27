@@ -28,7 +28,7 @@ Add the crate from git:
 
 ```toml
 [dependencies]
-validate = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["route"] }
+validate = { git = "https://github.com/projectlighthouse-io/toolkit", features = ["route"] }
 ```
 
 The `route` feature lets a handler ask for `Valid<Form<T>>`, `Valid<Json<T>>`,

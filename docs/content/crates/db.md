@@ -30,7 +30,7 @@ Add the crate from git, with the feature for your database:
 
 ```toml
 [dependencies]
-db = { git = "https://github.com/projectlighthouse-io/cloudfoundry" }
+db = { git = "https://github.com/projectlighthouse-io/toolkit" }
 ```
 
 The available features are `postgres`, `mysql`, `sqlite` and `singleton`.

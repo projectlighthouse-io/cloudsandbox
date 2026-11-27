@@ -24,7 +24,7 @@ Add the crate from git:
 
 ```toml
 [dependencies]
-event = { git = "https://github.com/projectlighthouse-io/cloudfoundry" }
+event = { git = "https://github.com/projectlighthouse-io/toolkit" }
 ```
 
 Two optional features connect it to other crates:

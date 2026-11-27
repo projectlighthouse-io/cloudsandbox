@@ -28,7 +28,7 @@ Add the crate from git:
 
 ```toml
 [dependencies]
-inertia = { git = "https://github.com/projectlighthouse-io/cloudfoundry" }
+inertia = { git = "https://github.com/projectlighthouse-io/toolkit" }
 ```
 
 Two optional features connect it to other crates:

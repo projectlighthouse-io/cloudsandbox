@@ -32,7 +32,7 @@ Add the crate from git:
 
 ```toml
 [dependencies]
-queue = { git = "https://github.com/projectlighthouse-io/cloudfoundry" }
+queue = { git = "https://github.com/projectlighthouse-io/toolkit" }
 ```
 
 The queue stores jobs through `sqlx`, so turn on the feature for your database.

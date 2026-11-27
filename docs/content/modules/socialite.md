@@ -30,7 +30,7 @@ providers are compiled:
 
 ```toml
 [dependencies]
-socialite = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["google", "github"] }
+socialite = { git = "https://github.com/projectlighthouse-io/toolkit", features = ["google", "github"] }
 ```
 
 | Feature | Provider | Email |

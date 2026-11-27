@@ -27,7 +27,7 @@ Add the crate from git:
 
 ```toml
 [dependencies]
-vite = { git = "https://github.com/projectlighthouse-io/cloudfoundry" }
+vite = { git = "https://github.com/projectlighthouse-io/toolkit" }
 ```
 
 ## Loading Vite

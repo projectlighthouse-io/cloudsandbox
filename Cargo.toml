@@ -4,14 +4,14 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-action = { git = "https://github.com/projectlighthouse-io/cloudfoundry" }
-command = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["action"] }
-db = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["postgres"] }
-route = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["server", "command", "action"] }
-securecookie = { git = "https://github.com/projectlighthouse-io/cloudfoundry" }
-session = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["postgres", "route", "command"] }
-queue = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["postgres", "command"] }
-event = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["queue", "command"] }
+action = { git = "https://github.com/projectlighthouse-io/toolkit" }
+command = { git = "https://github.com/projectlighthouse-io/toolkit", features = ["action"] }
+db = { git = "https://github.com/projectlighthouse-io/toolkit", features = ["postgres"] }
+route = { git = "https://github.com/projectlighthouse-io/toolkit", features = ["server", "command", "action"] }
+securecookie = { git = "https://github.com/projectlighthouse-io/toolkit" }
+session = { git = "https://github.com/projectlighthouse-io/toolkit", features = ["postgres", "route", "command"] }
+queue = { git = "https://github.com/projectlighthouse-io/toolkit", features = ["postgres", "command"] }
+event = { git = "https://github.com/projectlighthouse-io/toolkit", features = ["queue", "command"] }
 
 clap = { version = "4", features = ["derive"] }
 dotenvy = "0.15"

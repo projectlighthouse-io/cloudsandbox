@@ -24,7 +24,7 @@ Add the crate from git:
 
 ```toml
 [dependencies]
-csrf = { git = "https://github.com/projectlighthouse-io/cloudfoundry" }
+csrf = { git = "https://github.com/projectlighthouse-io/toolkit" }
 ```
 
 ## Protecting your routes

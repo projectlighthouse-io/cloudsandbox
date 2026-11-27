@@ -191,7 +191,7 @@ fn foot() -> String {
 <p>Small Rust crates for server-driven web apps. Take one crate, or all of them.</p>
 <a class="btn btn-inv" href="/docs/">{CTA}</a></div>
 <div class="foot-cols">{cols}</div></div>
-<div class="foot-legal mono"><a href="https://github.com/projectlighthouse-io/cloudfoundry">Source on GitHub</a><span>Built as static HTML, CSS and a little JavaScript</span></div>
+<div class="foot-legal mono"><a href="https://github.com/projectlighthouse-io/toolkit">Source on GitHub</a><span>Built as static HTML, CSS and a little JavaScript</span></div>
 <div class="wordmark" aria-hidden="true">toolkit</div></div></footer>"#
     )
 }

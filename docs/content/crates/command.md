@@ -29,7 +29,7 @@ Add the crate from git:
 
 ```toml
 [dependencies]
-command = { git = "https://github.com/projectlighthouse-io/cloudfoundry" }
+command = { git = "https://github.com/projectlighthouse-io/toolkit" }
 ```
 
 Turn on the `action` feature if you want to register an `Action` as a command

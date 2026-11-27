@@ -27,7 +27,7 @@ Add the crate from git:
 
 ```toml
 [dependencies]
-session = { git = "https://github.com/projectlighthouse-io/cloudfoundry" }
+session = { git = "https://github.com/projectlighthouse-io/toolkit" }
 ```
 
 Then turn on the feature for the store you want. `sqlx` is only pulled in with

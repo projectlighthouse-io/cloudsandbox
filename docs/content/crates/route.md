@@ -25,7 +25,7 @@ Add the crate from git:
 
 ```toml
 [dependencies]
-route = { git = "https://github.com/projectlighthouse-io/cloudfoundry" }
+route = { git = "https://github.com/projectlighthouse-io/toolkit" }
 ```
 
 Everything beyond routing is behind a feature:

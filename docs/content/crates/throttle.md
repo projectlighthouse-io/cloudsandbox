@@ -24,7 +24,7 @@ Add the crate from git:
 
 ```toml
 [dependencies]
-throttle = { git = "https://github.com/projectlighthouse-io/cloudfoundry" }
+throttle = { git = "https://github.com/projectlighthouse-io/toolkit" }
 ```
 
 Everything beyond the in-memory limiter is behind a feature:

@@ -28,8 +28,8 @@ Add the module from git. The `throttle` feature limits failed logins:
 
 ```toml
 [dependencies]
-auth = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["throttle"] }
-throttle = { git = "https://github.com/projectlighthouse-io/cloudfoundry" }
+auth = { git = "https://github.com/projectlighthouse-io/toolkit", features = ["throttle"] }
+throttle = { git = "https://github.com/projectlighthouse-io/toolkit" }
 ```
 
 Then add the layer after the session and CSRF layers:

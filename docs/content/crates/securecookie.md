@@ -27,7 +27,7 @@ Add the crate from git:
 
 ```toml
 [dependencies]
-securecookie = { git = "https://github.com/projectlighthouse-io/cloudfoundry" }
+securecookie = { git = "https://github.com/projectlighthouse-io/toolkit" }
 ```
 
 ## Encoding and decoding values
