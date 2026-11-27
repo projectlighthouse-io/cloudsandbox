@@ -87,22 +87,60 @@ const LOGO: &str = concat!(
     r##"<circle cx="15.5" cy="9.5" r="1.9" fill="#4db6a0"/><circle cx="15.5" cy="15.5" r="1.9" fill="#fff"/></svg>"##,
 );
 
-fn head(title: &str, desc: &str) -> String {
+/// The published origin, e.g. `https://toolkit.dev`, from `SITE_URL` at build
+/// time. Canonical links, the sitemap and social previews need it absolute.
+fn site() -> &'static str {
+    static SITE: std::sync::OnceLock<String> = std::sync::OnceLock::new();
+    SITE.get_or_init(|| match std::env::var("SITE_URL") {
+        Ok(url) if !url.trim().is_empty() => url.trim().trim_end_matches('/').to_owned(),
+        _ => {
+            eprintln!("warning: SITE_URL is not set; canonical links and the sitemap point at http://127.0.0.1:3000");
+            "http://127.0.0.1:3000".to_owned()
+        }
+    })
+}
+
+const SITE_NAME: &str = "toolkit";
+
+/// `<head>` with SEO: canonical URL, Open Graph and Twitter cards, icons, and
+/// `ld` as JSON-LD structured data. `path` is the page's root-relative URL.
+fn head(title: &str, desc: &str, path: &str, kind: &str, ld: &str) -> String {
+    let url = format!("{}{path}", site());
+    let image = format!("{}/og.png", site());
+    let ld = ld.replace("</", "<\\/");
     format!(
-        r#"<!DOCTYPE html>
+        r##"<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{}</title>
-<meta name="description" content="{}">
+<title>{t}</title>
+<meta name="description" content="{d}">
+<link rel="canonical" href="{url}">
+<meta name="theme-color" content="#151715">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:type" content="{kind}">
+<meta property="og:site_name" content="{SITE_NAME}">
+<meta property="og:title" content="{t}">
+<meta property="og:description" content="{d}">
+<meta property="og:url" content="{url}">
+<meta property="og:image" content="{image}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="toolkit: opinionated Rust batteries">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{t}">
+<meta name="twitter:description" content="{d}">
+<meta name="twitter:image" content="{image}">
+<script type="application/ld+json">{ld}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="/site.css">
 <script>document.documentElement.classList.add("js")</script>
-</head>"#,
-        esc(title),
-        esc(desc)
+</head>"##,
+        t = esc(title),
+        d = esc(desc),
     )
 }
 
@@ -153,10 +191,10 @@ fn foot() -> String {
     format!(
         r#"<footer class="foot"><div class="rail-box">
 <div class="foot-top"><div class="foot-brand"><a class="brand inv" href="/">{LOGO}<span>toolkit</span></a>
-<p>Small Rust crates for server-driven web apps. A design draft: the APIs on these pages are sketches and have not been compiled.</p>
+<p>Small Rust crates for server-driven web apps. Take one crate, or all of them.</p>
 <a class="btn btn-inv" href="/docs/">{CTA}</a></div>
 <div class="foot-cols">{cols}</div></div>
-<div class="foot-legal mono"><span>Design draft · 26 November 2026</span><span>Built as static HTML, CSS and a little JavaScript</span></div>
+<div class="foot-legal mono"><a href="https://github.com/projectlighthouse-io/cloudfoundry">Source on GitHub</a><span>Built as static HTML, CSS and a little JavaScript</span></div>
 <div class="wordmark" aria-hidden="true">toolkit</div></div></footer>"#
     )
 }
@@ -254,7 +292,33 @@ fn doc_page(all: &[Page], i: usize, raw: &str, meta: &(String, String), r: &mark
         ic("copy"),
         raw.replace("</", "<\\/")
     );
-    head(&format!("{} · toolkit docs", p.title), first_chars(&strip_tags(&r.lead), 150))
+    let lead_text = strip_tags(&r.lead);
+    let desc = description(&lead_text, &paragraphs(&r.body));
+    let desc = desc.as_str();
+    // Component pages lead with a one-line summary; it makes the title say what the crate does.
+    let summary = format!("{}: {} · {SITE_NAME}", p.title, lead_text.trim().trim_end_matches('.'));
+    let title = if is_comp && !lead_text.is_empty() && summary.chars().count() <= 62 { summary } else { format!("{} · Rust {SITE_NAME} docs", p.title) };
+    let path = href(p.id);
+    let mut crumbs = vec![("Docs".to_owned(), "/docs/".to_owned())];
+    if is_comp {
+        crumbs.push((p.title.to_owned(), path.clone()));
+    }
+    let ld = format!(
+        r#"[{{"@context":"https://schema.org","@type":"TechArticle","headline":{},"description":{},"url":{},"image":{},"isPartOf":{{"@type":"WebSite","name":{},"url":{}}}}},{{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{}]}}]"#,
+        json_str(&title),
+        json_str(desc),
+        json_str(&format!("{}{path}", site())),
+        json_str(&format!("{}/og.png", site())),
+        json_str(SITE_NAME),
+        json_str(&format!("{}/", site())),
+        crumbs
+            .iter()
+            .enumerate()
+            .map(|(n, (name, u))| format!(r#"{{"@type":"ListItem","position":{},"name":{},"item":{}}}"#, n + 1, json_str(name), json_str(&format!("{}{u}", site()))))
+            .collect::<Vec<_>>()
+            .join(",")
+    );
+    head(&title, desc, &path, "article", &ld)
         + r##"<body class="doc"><a class="skip" href="#main">Skip to content</a>"##
         + &nav(if is_comp { "Components" } else { "Docs" })
         + &format!(r#"<button type="button" class="dmenu" aria-expanded="false" aria-controls="dside">{}<span>Menu</span></button>"#, ic("menu"))
@@ -283,6 +347,64 @@ fn json_str(s: &str) -> String {
     }
     out.push('"');
     out
+}
+
+/// The text of the `<p>` elements in rendered HTML: prose only, no headings or code.
+fn paragraphs(html: &str) -> String {
+    html.split("<p>").skip(1).filter_map(|chunk| chunk.split_once("</p>")).map(|(p, _)| strip_tags(p)).collect::<Vec<_>>().join(" ")
+}
+
+/// A search snippet: the page's summary, then whole sentences of its body
+/// while they fit in 155 characters.
+fn description(lead: &str, body: &str) -> String {
+    const MAX: usize = 155;
+    let squash = |t: &str| t.split_whitespace().collect::<Vec<_>>().join(" ");
+    let (mut out, text) = (squash(lead), squash(body));
+    let mut rest = text.as_str();
+    for sentence in text.split_inclusive(". ") {
+        let next = if out.is_empty() { sentence.trim().to_owned() } else { format!("{out} {}", sentence.trim()) };
+        if next.chars().count() > MAX {
+            break;
+        }
+        out = next;
+        rest = &rest[sentence.len().min(rest.len())..];
+    }
+    // Too short to be a useful snippet: fill with whole words, then an ellipsis.
+    if out.chars().count() < 100 {
+        for word in rest.split_whitespace() {
+            if out.chars().count() + word.chars().count() + 2 > MAX {
+                out.push('…');
+                break;
+            }
+            if !out.is_empty() {
+                out.push(' ');
+            }
+            out.push_str(word);
+        }
+    }
+    out
+}
+
+fn sitemap(paths: &[String]) -> String {
+    let urls: String = paths.iter().map(|p| format!("  <url><loc>{}{}</loc></url>\n", site(), esc(p))).collect();
+    format!("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n{urls}</urlset>\n")
+}
+
+/// The page for unknown URLs. Not indexed; links back into the docs.
+fn not_found(index_json: &str) -> String {
+    let ld = format!(r#"{{"@context":"https://schema.org","@type":"WebPage","name":"Page not found","url":{}}}"#, json_str(&format!("{}/404.html", site())));
+    head(&format!("Page not found · {SITE_NAME}"), "This page does not exist. Start from the docs or the list of components.", "/404.html", "website", &ld)
+        .replace("<link rel=\"canonical\"", "<meta name=\"robots\" content=\"noindex\">\n<link rel=\"canonical\"")
+        + r##"<body><a class="skip" href="#main">Skip to content</a>"##
+        + &nav("")
+        + r#"<main id="main" class="page"><section class="hero"><div class="hero-tex" aria-hidden="true"></div><div class="rail-box hero-in" style="padding-bottom:120px">
+<p class="crumb mono">404</p>
+<h1>This page does not exist.</h1>
+<p class="sub">It may have moved. Start from the docs, or search with Ctrl K.</p>
+<div class="ctas"><a class="btn btn-ink btn-lg" href="/docs/">Read the docs</a><a class="btn btn-line btn-lg" href="/#parts">Browse components</a></div>
+</div></section></main>"#
+        + &foot()
+        + &tail(index_json)
 }
 
 fn main() {
@@ -326,6 +448,13 @@ fn main() {
         fs::create_dir_all(&dir).unwrap();
         fs::write(dir.join("index.html"), doc_page(&all, i, &raws[i], &metas[i], &rendered[i], &index_json)).unwrap();
     }
+    let urls: Vec<String> = std::iter::once("/".to_owned()).chain(all.iter().map(|p| href(p.id))).collect();
+    fs::write(out.join("sitemap.xml"), sitemap(&urls)).unwrap();
+    fs::write(out.join("robots.txt"), format!("User-agent: *\nAllow: /\n\nSitemap: {}/sitemap.xml\n", site())).unwrap();
+    fs::write(out.join("404.html"), not_found(&index_json)).unwrap();
+    fs::write(out.join("favicon.svg"), include_str!("../assets/favicon.svg")).unwrap();
+    fs::write(out.join("apple-touch-icon.png"), include_bytes!("../assets/apple-touch-icon.png")).unwrap();
+    fs::write(out.join("og.png"), include_bytes!("../assets/og.png")).unwrap();
     fs::write(out.join("site.css"), include_str!("../assets/site.css")).unwrap();
     fs::write(out.join("site.js"), include_str!("../assets/site.js")).unwrap();
     println!("built {} pages", all.len() + 1);

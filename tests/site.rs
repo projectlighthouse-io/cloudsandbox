@@ -20,7 +20,7 @@ async fn get(uri: &str) -> (StatusCode, String) {
     let routes = cloudsandbox::router(&app, MemoryStore::new(), Codec::new(Keys::parse(&key).unwrap())).unwrap();
     let res = routes.handle(Request::get(uri).body(route::empty()).unwrap()).await;
     let status = res.status();
-    (status, String::from_utf8(res.into_body().collect().await.unwrap().to_bytes().to_vec()).unwrap())
+    (status, String::from_utf8_lossy(&res.into_body().collect().await.unwrap().to_bytes()).into_owned())
 }
 
 #[tokio::test]
@@ -31,5 +31,23 @@ async fn serves_the_docs_site() {
     assert!(body.contains("Opinionated Rust batteries."));
     assert_eq!(get("/docs/crates/route/").await.0, StatusCode::OK);
     assert_eq!(get("/site.css").await.0, StatusCode::OK);
-    assert_eq!(get("/servers").await.0, StatusCode::NOT_FOUND);
+    let (status, body) = get("/servers").await;
+    assert_eq!(status, StatusCode::NOT_FOUND);
+    assert!(body.contains("This page does not exist."), "the 404 page");
+}
+
+#[tokio::test]
+async fn serves_seo_files() {
+    let (status, body) = get("/").await;
+    assert_eq!(status, StatusCode::OK);
+    for tag in [r#"<link rel="canonical" href=""#, r#"property="og:image""#, r#"name="twitter:card""#, "application/ld+json"] {
+        assert!(body.contains(tag), "home page has {tag}");
+    }
+    let (status, robots) = get("/robots.txt").await;
+    assert!(status == StatusCode::OK && robots.contains("Sitemap: "), "robots.txt");
+    let (status, sitemap) = get("/sitemap.xml").await;
+    assert!(status == StatusCode::OK && sitemap.contains("/docs/crates/route/</loc>"), "sitemap lists the docs");
+    for file in ["/og.png", "/favicon.svg", "/apple-touch-icon.png"] {
+        assert_eq!(get(file).await.0, StatusCode::OK, "{file}");
+    }
 }

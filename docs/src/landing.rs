@@ -225,7 +225,16 @@ pub fn page(index_json: &str) -> String {
         s7 = strip("07", "FAQ", "faq", false),
         faq = faq(),
     );
-    head("toolkit · Opinionated Rust batteries", "Small Rust crates for server-driven web apps: routing, sessions, Inertia, queues and auth.")
+    head(
+        "toolkit · Opinionated Rust batteries",
+        "Small Rust crates for server-driven web apps: routing, sessions, Inertia, queues and auth.",
+        "/",
+        "website",
+        &format!(
+            r#"{{"@context":"https://schema.org","@type":"WebSite","name":"toolkit","url":{},"description":"Small Rust crates for server-driven web apps: routing, sessions, Inertia, queues and auth."}}"#,
+            crate::json_str(&format!("{}/", crate::site()))
+        ),
+    )
         + r##"<body class="home"><a class="skip" href="#main">Skip to content</a>"##
         + &nav("")
         + r#"<main id="main" class="page">"#
