@@ -13,7 +13,7 @@ const CTA: &str = "Read the docs";
 
 const CATS: &[(&str, &[&str])] = &[
     ("Requests", &["route", "validate", "action"]),
-    ("Sessions and security", &["securecookie", "session", "csrf"]),
+    ("Sessions and security", &["securecookie", "session", "csrf", "throttle"]),
     ("Frontend", &["inertia", "vite", "sse"]),
     ("Background work", &["queue", "event", "command"]),
     ("Data", &["db"]),

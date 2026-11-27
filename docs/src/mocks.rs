@@ -103,6 +103,13 @@ pub fn mock(id: &str) -> String {
                 .collect();
             frame(&format!("{}<div class=\"rows\">{rows}</div>", bar("csrf::layer()", "")), "seq", 1100, "Requests checked for a CSRF token: one passes, one is exempt, one is rejected")
         }
+        "throttle" => {
+            let rows: String = [("1", "2 left", "ok"), ("2", "1 left", "ok"), ("3", "0 left", "ok"), ("4", "429 · retry 58s", "bad")]
+                .iter()
+                .map(|(n, w, k)| format!("<div class=\"row\" data-s><span class=\"meth\">POST</span><span class=\"mono grow\">/login <span class=\"muted\">#{n}</span></span>{}</div>", status(w, k)))
+                .collect();
+            frame(&format!("{}<div class=\"rows\">{rows}</div>", bar("FixedWindow::new(3, 60s)", "login:ada|10.0.0.1")), "seq", 900, "Login attempts counted against a limit of three a minute, the fourth refused")
+        }
         "inertia" => frame(
             &(bar("GET /runs/42", "X-Inertia")
                 + &stepper(&[("First visit", "full HTML, page object embedded"), ("Inertia visit", "JSON: component and props"), ("Partial reload", "only logs, other props skipped"), ("Version changed", "409, full reload")])),

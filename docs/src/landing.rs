@@ -140,7 +140,7 @@ pub fn page(index_json: &str) -> String {
     let body = format!(
         r##"
 <section class="hero"><div class="hero-tex" aria-hidden="true"></div><div class="rail-box hero-in">
-<a class="pill reveal" href="#parts"><span class="pill-ic">{layers}</span>16 crates, none required together<span class="pill-arrow">{arrow}</span></a>
+<a class="pill reveal" href="#parts"><span class="pill-ic">{layers}</span>17 crates, none required together<span class="pill-arrow">{arrow}</span></a>
 <h1 class="reveal">Opinionated Rust batteries.</h1>
 <p class="sub reveal">Routing, sessions, Inertia pages, queues and auth as small crates on plain <code>http</code> and <code>tower</code> types. Take one, or build a whole app.</p>
 <div class="ctas reveal"><a class="btn btn-ink btn-lg" href="/docs/">{CTA}</a><a class="btn btn-line btn-lg" href="#parts">Browse components</a></div>
@@ -148,7 +148,7 @@ pub fn page(index_json: &str) -> String {
 </div></section>
 
 <section aria-labelledby="h-compose">{s1}<div class="rail-box grid">
-<div class="cell hcell reveal"><h2 id="h-compose">Take one crate. Or all sixteen.</h2><p class="lede">Each component has its own crate and version. Integrations between them are features you switch on, never dependencies you inherit.</p></div>
+<div class="cell hcell reveal"><h2 id="h-compose">Take one crate. Or all seventeen.</h2><p class="lede">Each component has its own crate and version. Integrations between them are features you switch on, never dependencies you inherit.</p></div>
 <div class="row2">{compose}</div></div></section>
 
 <section aria-labelledby="h-req" id="parts">{s2}<div class="rail-box grid">
