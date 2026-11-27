@@ -35,7 +35,7 @@ socialite = { git = "https://github.com/projectlighthouse-io/cloudfoundry", feat
 
 | Feature | Provider | Email |
 | --- | --- | --- |
-| `github` | `GitHub` | Public profile email, if the user shows one |
+| `github` | `GitHub` | Verified primary email with the `user:email` scope; otherwise the public profile email, unverified |
 | `gitlab` | `GitLab`, on gitlab.com or self-hosted | Yes, with a verified flag |
 | `google` | `Google` | Yes, with a verified flag |
 | `reddit` | `Reddit` | No |
@@ -155,13 +155,25 @@ databases, and `--with-ui` for the Inertia callback and the buttons:
 
 1. An account already linked to this provider account logs in.
 2. A logged-in user gets the provider account linked to them.
-3. An account with the same email is the same person: the provider account is
-   linked to it.
-4. Otherwise a new account is created, with the provider's name and email and
-   no password.
+3. An account with the same **verified** email is the same person: the
+   provider account is linked to it.
+4. Otherwise a new account is created, with the provider's name and verified
+   email and no password.
 
-Reddit and X share no email address, so they can only be connected by a user
-who is already logged in.
+Steps 3 and 4 need an email the provider has verified (`email_verified` is
+`Some(true)`). Without one, the sign-in is refused with a message asking the
+person to log in first and connect the provider from there. Reddit and X share
+no email address at all, so they can only be connected that way too.
+
+> [!WARNING]
+> Linking by email trusts the provider's word that the person owns that
+> address. If a provider returns an email it has not verified, anyone could
+> sign up there with your user's address and then sign in to your app as that
+> user. `src/social.rs` therefore only links or creates by a verified email.
+> It has a flag, `TRUST_UNVERIFIED_EMAILS`, which defaults to `false`; leave it
+> that way. For GitHub, ask for the `user:email` scope, so that `socialite` can
+> read the verified primary email; without it, GitHub's verification is unknown
+> and GitHub users can only connect after logging in.
 
 Accounts made this way have no password. Password login refuses them, and they
 can set a password through "forgot password". The `allow_null_passwords`

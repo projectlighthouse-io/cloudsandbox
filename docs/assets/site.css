@@ -378,3 +378,9 @@ a.cell:hover,.tcell:hover{background:var(--tint)}
   *,*::before,*::after{animation:none!important;transition:none!important}
   .js .reveal{opacity:1;transform:none}
 }
+/* ---------- warning callout (`> [!WARNING]` in the docs) ---------- */
+.prose .callout{margin:24px 0;padding:14px 18px;border-radius:var(--r)}
+.prose .callout-warn{border:1.5px dashed #d6453d;background:#fdf1f0;color:#5c1d19}
+.prose .callout-title{margin:0 0 6px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#b8352d}
+.prose .callout p:last-child{margin-bottom:0}
+.prose .callout code{background:rgba(214,69,61,.1)}

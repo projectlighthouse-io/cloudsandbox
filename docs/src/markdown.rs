@@ -2,7 +2,7 @@
 //! tables one tag per line, ids on every heading), which the design was built from.
 
 use crate::highlight;
-use pulldown_cmark::{CodeBlockKind, Event, HeadingLevel, Options, Parser, Tag, TagEnd};
+use pulldown_cmark::{BlockQuoteKind, CodeBlockKind, Event, HeadingLevel, Options, Parser, Tag, TagEnd};
 
 pub struct Rendered {
     pub lead: String,
@@ -100,7 +100,7 @@ pub fn render(text: &str, src: &str, pages: &[(&str, &str)]) -> Rendered {
     let mut cell = 0usize;
     let mut aligns = vec![];
 
-    let parser = Parser::new_ext(text, Options::ENABLE_TABLES).into_offset_iter();
+    let parser = Parser::new_ext(text, Options::ENABLE_TABLES | Options::ENABLE_GFM).into_offset_iter();
     let mut events = parser.peekable();
     while let Some((ev, range)) = events.next() {
         match ev {
@@ -144,6 +144,11 @@ pub fn render(text: &str, src: &str, pages: &[(&str, &str)]) -> Rendered {
                 item_depth -= 1;
                 html.push_str("</li>\n");
             }
+            // `> [!WARNING]` (GitHub's alert syntax) becomes a warning callout.
+            Event::Start(Tag::BlockQuote(Some(BlockQuoteKind::Warning | BlockQuoteKind::Caution))) => {
+                html.push_str("<div class=\"callout callout-warn\" role=\"note\">\n<p class=\"callout-title\">Warning</p>\n")
+            }
+            Event::End(TagEnd::BlockQuote(Some(BlockQuoteKind::Warning | BlockQuoteKind::Caution))) => html.push_str("</div>\n"),
             Event::Start(Tag::BlockQuote(_)) => html.push_str("<blockquote>\n"),
             Event::End(TagEnd::BlockQuote(_)) => html.push_str("</blockquote>\n"),
             Event::Start(Tag::CodeBlock(kind)) => {
