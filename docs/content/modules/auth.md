@@ -52,7 +52,7 @@ routes to add:
 
 | Command | Publishes |
 | --- | --- |
-| `art publish auth` | JSON handlers for your own frontend: login, logout, register, forgot and reset password |
+| `art publish auth` | JSON handlers for your own frontend: login, logout, register, forgot, reset and change password |
 | `art publish auth --with-ui` | The same flows as Inertia handlers, plus Vue pages for each |
 
 Add `--driver sqlite` or `--driver mysql` for those databases. Published files
@@ -63,10 +63,10 @@ touches them, and `art publish` never overwrites a file unless you pass
 | Published to | Contents |
 | --- | --- |
 | `src/users.rs` | `User`, `Users` and the `auth` traits implemented with `sqlx` |
-| `src/handlers/{login,register,password_reset}.rs` | The handlers |
-| `src/requests/{login,register,password_reset}.rs` | Inputs and their validation |
+| `src/handlers/{login,register,password,password_reset}.rs` | The handlers |
+| `src/requests/{login,register,password,password_reset}.rs` | Inputs and their validation |
 | `migrations/<timestamp>_create_users.*.sql` | `users`, `api_tokens` and `password_resets` |
-| `resources/js/pages/auth/*.vue` | Login, register, forgot and reset pages (`--with-ui`) |
+| `resources/js/pages/{auth,settings}/*.vue` | Login, register, forgot and reset pages, and the change-password page (`--with-ui`) |
 
 ## Loading users
 
@@ -131,6 +131,28 @@ The published `register` handler validates the input, checks the email is not
 taken, hashes the password with `auth::hash_password` (off the async runtime),
 inserts the user and logs them in. Add whatever your app needs on sign-up, such
 as a welcome mail or a default team, to that handler.
+
+The published `users` table has an optional `name`, and the register request
+accepts it without requiring it. If your app needs a name, make it required in
+`src/requests/register.rs`; that one line is all it takes.
+
+## Changing passwords
+
+A logged-in user changes their password with `auth.change_password`. It checks
+the current password, stores the new hash, gives the session a new id, and
+clears the "remember me" token so remembered devices have to log in again. The
+user stays logged in on the device they used:
+
+```rust
+match auth.change_password(&users, &input.current_password, &input.password).await {
+    Ok(()) => Ok(StatusCode::NO_CONTENT),
+    Err(ChangeError::WrongPassword) => Err(field_error("current_password", "The current password is incorrect.")),
+    Err(ChangeError::NotLoggedIn) => Err(StatusCode::UNAUTHORIZED.into_response()),
+    Err(ChangeError::Other(e)) => Err(server_error(e)),
+}
+```
+
+Put the route behind `auth::require::<User>()`.
 
 ## Protecting routes
 
