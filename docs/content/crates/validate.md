@@ -28,8 +28,11 @@ Add the crate from git:
 
 ```toml
 [dependencies]
-validate = { git = "https://github.com/projectlighthouse-io/cloudfoundry" }
+validate = { git = "https://github.com/projectlighthouse-io/cloudfoundry", features = ["route"] }
 ```
+
+The `route` feature lets a handler ask for `Valid<Form<T>>`, `Valid<Json<T>>`,
+`Valid<Query<T>>` or `Valid<Path<T>>`, and turns `Errors` into a response.
 
 ## Validating input
 
@@ -66,8 +69,52 @@ user sees all of their mistakes at once.
 The field names in `Errors` are the names the frontend sent. That lets a form
 attach each message to the input it belongs to.
 
+With the `route` feature, invalid input never reaches your handler. The request
+is answered with a 422 that carries every error:
+
+```json
+{ "message": "The given data was invalid.", "errors": { "email": ["Must be a valid email address."] } }
+```
+
+On an Inertia visit, the `inertia` crate (feature `validate`) redirects back
+instead, and the next page receives the messages as `props.errors`.
+
+## Available rules
+
+| Kind | Rules |
+| --- | --- |
+| Presence, length | `required`, `min_len`, `max_len`, `exact_len`, `min_items`, `max_items` |
+| Numbers | `between`, `at_least`, `at_most`, `integer`, `numeric` |
+| Choices, comparisons | `one_of`, `not_one_of`, `same`, `different`, `accepted` |
+| Characters | `alpha`, `alpha_num`, `alpha_dash`, `lowercase`, `uppercase`, `starts_with`, `ends_with` |
+| Formats | `email`, `url`, `uuid`, `ip`, `ipv4`, `ipv6`, `date` (`YYYY-MM-DD`) |
+
 ## Writing rules
 
 A rule is a plain function that returns `Result<(), Message>`. The built-in
 rules work this way, and you add your own the same way: write a function and
-pass its result to `e.check`.
+pass its result to `e.check`. The `rule` helper turns a condition and a message
+into that result:
+
+```rust
+fn repo_slug(s: &str) -> Result<(), Message> {
+    rule(s.split('/').count() == 2, "Must look like owner/name.")
+}
+```
+
+The same building blocks cover custom messages, fields that depend on each
+other, optional fields and lists:
+
+```rust
+e.check("repo", repo_slug(&self.repo));                                  // your own rule
+e.check("name", required(&self.name).or_message("Tell us your name.")); // your own message
+e.check("confirm", same(&self.password, &self.confirm));                 // compare two fields
+e.check("bio", nullable(self.bio.as_deref(), |b| max_len(b, 500)));      // optional field
+e.check(&format!("tags.{i}"), required(tag));                            // each item in a list
+```
+
+### Checks that need the database
+
+Rules never query the database. Run a check such as "this email is taken" in an
+action, and report the failure with `Errors::add` so it reaches the user the
+same way as every other error.

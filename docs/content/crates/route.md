@@ -28,8 +28,14 @@ Add the crate from git:
 route = { git = "https://github.com/projectlighthouse-io/cloudfoundry" }
 ```
 
-Turn on the `action` feature if you want to register an `Action` directly as a
-handler with `route::action(a)`.
+Everything beyond routing is behind a feature:
+
+| Feature | Adds |
+| --- | --- |
+| `server` | `route::serve` over hyper (HTTP/1 and HTTP/2) |
+| `command` | `route::command::{list, serve}` for `route:list` and `serve` |
+| `action` | `route::action(a)`: an `Action` as a handler |
+| `multipart` | `Multipart`, a `multipart/form-data` input for file uploads |
 
 ## Basic routing
 
@@ -72,19 +78,42 @@ to you.
 
 ### Combining inputs
 
-When one input needs data from several places, derive `FromRequest` on a
-struct and mark where each field comes from:
+When a handler needs data from several places, take a tuple of up to four
+inputs. Inputs that only read the request head, such as `Path<T>` or a
+session, go first; at most one input reads the body, and it goes last:
 
 ```rust
-#[derive(FromRequest)]
-struct UpdateRun {
-    #[path]
-    id: RunId,
+async fn update(cx: Cx<App>, (Path(id), Json(body)): (Path<RunId>, Json<UpdateRunBody>)) -> Result<Redirect, AppError>
+```
 
-    #[json]
-    body: UpdateRunBody,
+## Request bodies
+
+`Form`, `Json` and `Bytes` read at most 2 MiB (`DEFAULT_BODY_LIMIT`). A larger
+body is answered with a 413 before your handler runs. Raise the limit for a
+whole router or group, or for one route:
+
+```rust
+r.body_limit(8 * 1024 * 1024);                                   // every route below, groups inherit it
+r.post("/sites", sites::store).body_limit(25 * 1024 * 1024);     // one route
+```
+
+### File uploads
+
+With the `multipart` feature, ask for `Multipart` and read the form field by
+field as it streams in:
+
+```rust
+async fn upload(mut form: Multipart) -> Result<String, MultipartError> {
+    while let Some(field) = form.next_field().await? {      // over the limit: 413
+        let name = field.name().unwrap_or("").to_owned();
+        let bytes = field.bytes().await?;
+    }
+    Ok("ok".into())
 }
 ```
+
+The whole body counts against the route's body limit, so an upload route
+usually raises it.
 
 ## Named routes
 
