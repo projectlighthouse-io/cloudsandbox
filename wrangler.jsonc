@@ -1,0 +1,12 @@
+// Cloudflare Workers static assets: the docs site, built into docs/dist by `make build-static`.
+// Cloudflare build command: curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal && . "$HOME/.cargo/env" && make build-static
+// Deploy command: npx wrangler deploy
+{
+  "name": "toolkit",
+  "compatibility_date": "2026-11-27",
+  "assets": {
+    "directory": "./docs/dist",
+    // Unknown URLs get docs/dist/404.html with a 404 status.
+    "not_found_handling": "404-page"
+  }
+}

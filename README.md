@@ -22,14 +22,17 @@ make build-static                                   # toolkit.projectlighthouse.
 SITE_URL=https://staging.example.com make build-static  # another host
 ```
 
-Cloudflare Pages builds it on every push (Workers & Pages, connected to this repository):
+Cloudflare builds and deploys it on every push (Workers static assets, configured in
+`wrangler.jsonc`; Workers & Pages → Create → Continue with GitHub → this repository):
 
 | Setting | Value |
 | --- | --- |
 | Production branch | `master` |
 | Build command | `curl -sSf https://sh.rustup.rs \| sh -s -- -y --profile minimal && . "$HOME/.cargo/env" && make build-static` |
-| Build output directory | `docs/dist` |
+| Deploy command | `npx wrangler deploy` |
 | Custom domain | `toolkit.projectlighthouse.io` |
+
+Cloudflare's build image has no Rust, so the build command installs it first.
 
 `docs/dist` is not committed; nobody builds it for production by hand.
 
