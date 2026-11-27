@@ -53,7 +53,7 @@ let sessions = session::layer(PostgresStore::new(db.pool()), codec)
     .same_site(SameSite::Lax);
 
 // in a handler input
-async fn store(cx: Cx<App>, (session, input): (Session, Valid<Form<Login>>)) -> ...
+async fn store(cx: Cx<App>, session: Session, input: Valid<Form<Login>>) -> ...
 
 session.insert("cart", &cart)?;
 let cart: Option<Cart> = session.get("cart")?;

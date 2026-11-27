@@ -96,7 +96,7 @@ async fn redirect(cx: Cx<App>, session: Session) -> Redirect {
 }
 
 // GET /auth/google/callback
-async fn callback(cx: Cx<App>, (auth, session, Query(cb)): (Auth<User>, Session, Query<Callback>)) -> Result<Redirect, AppError> {
+async fn callback(cx: Cx<App>, auth: Auth<User>, session: Session, Query(cb): Query<Callback>) -> Result<Redirect, AppError> {
     let social = cx.google.social_user(&session, cb).await?;
     let user = cx.users.find_or_create_social(&social, auth.user()).await?;
     auth.login(&user);
@@ -126,7 +126,7 @@ Your callback takes a `SocialCallback`. By the time your handler runs, `state`
 has been checked and the code exchanged; `SocialCallback` holds the result:
 
 ```rust
-async fn callback(cx: Cx<App>, (auth, social): (Auth<User>, SocialCallback)) -> Redirect {
+async fn callback(cx: Cx<App>, auth: Auth<User>, social: SocialCallback) -> Redirect {
     match social.0 {
         Ok(user) => { /* find or create the account, auth.login, redirect */ }
         Err(e) => { /* declined, forged state, network failure: your choice of page */ }

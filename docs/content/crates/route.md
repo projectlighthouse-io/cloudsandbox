@@ -62,13 +62,13 @@ receives them already parsed into the type it asks for.
 
 ## Writing handlers
 
-A handler is a free async function with one typed input and one typed output:
+A handler is a free async function with typed inputs and one typed output:
 
 ```rust
 async fn show(cx: Cx<App>, Path(id): Path<RunId>) -> Result<Page<RunShow>, AppError>
 ```
 
-`Cx<S>` gives the handler your app state, and it derefs to `S`. The input is
+`Cx<S>` gives the handler your app state, and it derefs to `S`. An input is
 any type that implements `FromRequest`; the toolkit ships `Path<T>`,
 `Query<T>`, `Form<T>`, `Json<T>`, and `()` when there is no input at all. The
 output is any type that implements `IntoResponse`.
@@ -76,15 +76,19 @@ output is any type that implements `IntoResponse`.
 Handlers can live in whichever module suits your app. How you group them is up
 to you.
 
-### Combining inputs
+### Several inputs
 
-When a handler needs data from several places, take a tuple of up to four
-inputs. Inputs that only read the request head, such as `Path<T>` or a
-session, go first; at most one input reads the body, and it goes last:
+A handler takes up to six arguments. Those that only read the request head,
+such as `Cx<App>`, `Path<T>` or a session, can go in any order; at most one
+reads the body (`Json`, `Form`, `Bytes`, `Multipart`), and it goes last:
 
 ```rust
-async fn update(cx: Cx<App>, (Path(id), Json(body)): (Path<RunId>, Json<UpdateRunBody>)) -> Result<Redirect, AppError>
+async fn update(cx: Cx<App>, Path(id): Path<RunId>, Json(body): Json<UpdateRunBody>) -> Result<Redirect, AppError>
 ```
+
+Putting a body input anywhere but last does not compile. A tuple of inputs
+also counts as one input, `(Path<RunId>, Json<T>)`, which helps when a layer or
+helper wants to pass several around together.
 
 ## Responses
 
@@ -247,7 +251,7 @@ name in your app.
 
 ## Things to know
 
-- A handler is an async function taking one input: `fn(I)` or `fn(Cx<App>, I)`. To read several things, take a tuple of up to four inputs; only the last one may read the body (`Json`, `Form`, `Bytes`, `Multipart`).
+- A handler is an async function with up to six arguments. Only the last one may read the body (`Json`, `Form`, `Bytes`, `Multipart`); the others read the request head.
 - Layers added first run outermost. Add the session layer before CSRF and auth, so they can use it.
 - `build()` refuses duplicate route names, duplicate method + path pairs and conflicting parameters, so a bad route table fails at startup, not at request time.
 - Bodies are limited to 2 MiB unless you raise it with `body_limit`; larger requests get `413` before your handler runs.

@@ -98,7 +98,7 @@ and update the password hash. The hash is an `Option`: accounts made through
 they set one through "forgot password". Then `auth.attempt` does the whole login:
 
 ```rust
-pub async fn login(cx: Cx<App>, (auth, input): (Auth<User>, Valid<Json<Login>>)) -> Result<Redirect, Response<Body>> {
+pub async fn login(cx: Cx<App>, auth: Auth<User>, input: Valid<Json<Login>>) -> Result<Redirect, Response<Body>> {
     let users = Users { db: cx.db.clone() };
     match auth.attempt(&users, &input.email, &input.password, input.remember).await {
         Ok(_user) => Ok(Redirect::to_route("home")),

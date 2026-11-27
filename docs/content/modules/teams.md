@@ -121,7 +121,7 @@ last switched to, if they can still open it, and otherwise their first team. It
 is kept in the session:
 
 ```rust
-async fn switch((m, mut current): (Membership<TeamRole>, CurrentTeam<TeamRole>)) -> Redirect {
+async fn switch(m: Membership<TeamRole>, mut current: CurrentTeam<TeamRole>) -> Redirect {
     current.set(&m);
     Redirect::to(format!("/teams/{}", m.team.id))
 }
