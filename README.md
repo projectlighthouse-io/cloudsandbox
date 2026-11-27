@@ -7,7 +7,7 @@ The toolkit docs site, served by an app built on the foundry crates.
 ```bash
 docker start cloudsandbox-pg     # Postgres for sessions and jobs (DATABASE_URL in .env)
 art migrate
-make build                       # build the site into docs/dist
+make build-static                # build the site into docs/dist
 art dev                          # http://127.0.0.1:3000
 ```
 
@@ -18,8 +18,8 @@ https://toolkit.projectlighthouse.io. Canonical links, `sitemap.xml`, `robots.tx
 previews use that address; set `SITE_URL` to build for another host (e.g. staging):
 
 ```bash
-make build                                          # toolkit.projectlighthouse.io
-SITE_URL=https://staging.example.com make build     # another host
+make build-static                                   # toolkit.projectlighthouse.io
+SITE_URL=https://staging.example.com make build-static  # another host
 ```
 
 Cloudflare Pages builds it on every push (Workers & Pages, connected to this repository):
@@ -27,7 +27,7 @@ Cloudflare Pages builds it on every push (Workers & Pages, connected to this rep
 | Setting | Value |
 | --- | --- |
 | Production branch | `master` |
-| Build command | `curl -sSf https://sh.rustup.rs \| sh -s -- -y --profile minimal && . "$HOME/.cargo/env" && make build` |
+| Build command | `curl -sSf https://sh.rustup.rs \| sh -s -- -y --profile minimal && . "$HOME/.cargo/env" && make build-static` |
 | Build output directory | `docs/dist` |
 | Custom domain | `toolkit.projectlighthouse.io` |
 
