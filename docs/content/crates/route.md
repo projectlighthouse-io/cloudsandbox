@@ -86,6 +86,44 @@ session, go first; at most one input reads the body, and it goes last:
 async fn update(cx: Cx<App>, (Path(id), Json(body)): (Path<RunId>, Json<UpdateRunBody>)) -> Result<Redirect, AppError>
 ```
 
+## Responses
+
+A handler returns anything that implements `IntoResponse`. The same router can
+serve JSON to an API client, HTML to a browser and redirects to a form:
+
+```rust
+use route::{Html, Json, Redirect, http::StatusCode};
+
+// GET /runs/42.json  ->  200, application/json
+async fn show_json(cx: Cx<App>, Path(id): Path<RunId>) -> Result<Json<RunView>, AppError> {
+    Ok(Json(cx.runs.find(id).await?.into()))
+}
+
+// GET /runs/42  ->  200, text/html
+async fn show_html(cx: Cx<App>, Path(id): Path<RunId>) -> Result<Html<String>, AppError> {
+    let run = cx.runs.find(id).await?;
+    Ok(Html(format!("<h1>Run {}</h1><p>{}</p>", run.id, run.status)))
+}
+
+// POST /runs  ->  201, application/json
+async fn store(cx: Cx<App>, Json(body): Json<NewRun>) -> Result<(StatusCode, Json<RunView>), AppError> {
+    Ok((StatusCode::CREATED, Json(cx.runs.create(body).await?.into())))
+}
+```
+
+| Return | Response |
+| --- | --- |
+| `Json(value)` | `application/json`; `value` is any `Serialize` type |
+| `Html(markup)` | `text/html`; `markup` is a `String` or `&'static str` |
+| `String`, `&'static str` | `text/plain` |
+| `Redirect` | `303` to a path or a named route |
+| `StatusCode` | That status, empty body |
+| `(StatusCode, output)` | Any output above with another status |
+| `Result<output, error>` | Either side, when both are outputs (your `AppError`) |
+
+`Html` does not escape anything: escape user input before putting it in markup,
+or render pages with Inertia instead.
+
 ## Request bodies
 
 `Form`, `Json` and `Bytes` read at most 2 MiB (`DEFAULT_BODY_LIMIT`). A larger
