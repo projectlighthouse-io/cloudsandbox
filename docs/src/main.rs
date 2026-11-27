@@ -87,16 +87,13 @@ const LOGO: &str = concat!(
     r##"<circle cx="15.5" cy="9.5" r="1.9" fill="#4db6a0"/><circle cx="15.5" cy="15.5" r="1.9" fill="#fff"/></svg>"##,
 );
 
-/// The published origin, e.g. `https://toolkit.dev`, from `SITE_URL` at build
-/// time. Canonical links, the sitemap and social previews need it absolute.
+/// The published origin. Canonical links, the sitemap and social previews need
+/// it absolute. `SITE_URL` at build time overrides it, e.g. for a staging host.
 fn site() -> &'static str {
     static SITE: std::sync::OnceLock<String> = std::sync::OnceLock::new();
     SITE.get_or_init(|| match std::env::var("SITE_URL") {
         Ok(url) if !url.trim().is_empty() => url.trim().trim_end_matches('/').to_owned(),
-        _ => {
-            eprintln!("warning: SITE_URL is not set; canonical links and the sitemap point at http://127.0.0.1:3000");
-            "http://127.0.0.1:3000".to_owned()
-        }
+        _ => "https://toolkit.projectlighthouse.io".to_owned(),
     })
 }
 
