@@ -7,7 +7,7 @@ The toolkit docs site, served by an app built on the foundry crates.
 ```bash
 docker start cloudsandbox-pg     # Postgres for sessions and jobs (DATABASE_URL in .env)
 art migrate
-(cd docs && cargo run --release) # build the site into docs/dist
+make build                       # build the site into docs/dist
 art dev                          # http://127.0.0.1:3000
 ```
 
@@ -18,14 +18,29 @@ https://toolkit.projectlighthouse.io. Canonical links, `sitemap.xml`, `robots.tx
 previews use that address; set `SITE_URL` to build for another host (e.g. staging):
 
 ```bash
-(cd docs && cargo run --release)                                         # toolkit.projectlighthouse.io
-(cd docs && SITE_URL=https://staging.example.com cargo run --release)    # another host
+make build                                          # toolkit.projectlighthouse.io
+SITE_URL=https://staging.example.com make build     # another host
 ```
+
+Cloudflare Pages builds it on every push (Workers & Pages, connected to this repository):
+
+| Setting | Value |
+| --- | --- |
+| Production branch | `master` |
+| Build command | `curl -sSf https://sh.rustup.rs \| sh -s -- -y --profile minimal && . "$HOME/.cargo/env" && make build` |
+| Build output directory | `docs/dist` |
+| Custom domain | `toolkit.projectlighthouse.io` |
+
+`docs/dist` is not committed; nobody builds it for production by hand.
 
 Every page gets a title and description for search results, a canonical link, Open Graph and
 Twitter card tags with `og.png`, and JSON-LD (a WebSite for the home page; a TechArticle with
 breadcrumbs for each docs page). The app serves `docs/dist/404.html` with a 404 status for unknown
 URLs. After publishing, submit `{SITE_URL}/sitemap.xml` in Google Search Console.
+
+Each component page shows its crate's version from the `version:` line of its front matter
+(`docs/content/**/*.md`). Keep it equal to the crate's `Cargo.toml` version; while it is `0.x` the
+page marks it beta. The build fails if a component page has no version.
 
 The preview image (`docs/assets/og.png`, 1200×630) and the icons are committed files; regenerate
 them if the name or tagline changes.
