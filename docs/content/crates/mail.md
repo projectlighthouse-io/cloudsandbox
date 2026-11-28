@@ -50,7 +50,7 @@ pub mail: mail::Config,
 [mail]
 url = "secret_env(MAIL_URL, log)"
 from = "env(MAIL_FROM, hello@example.test)"
-queue = true
+queue = "env(MAIL_QUEUE, false)"   # true in production, with a worker running
 ```
 
 ```rust
@@ -100,10 +100,9 @@ The published `deliver` renders a template and sends it:
 crate::mailer::deliver(&app, include_str!("../resources/mail/invitation.md"), &email, &[("name", &team.name), ("link", &link)]).await;
 ```
 
-With `[mail] queue = true` (the default) it stores a `mail::SendMail` job and
-returns; `queue:work` sends it, retrying failures with the queue's backoff
-(three attempts, then failed jobs). With `queue = false` it sends during the
-request. Errors are logged, so a handler carries on. [auth](../modules/auth.md)
+By default it sends during the request. With `[mail] queue = true` it stores
+a `mail::SendMail` job and returns; `queue:work` sends it, retrying failures with the queue's backoff
+(three attempts, then failed jobs). Errors are logged, so a handler carries on. [auth](../modules/auth.md)
 sends reset and verification links this way, and [teams](../modules/teams.md)
 sends invitations.
 
@@ -138,8 +137,9 @@ MAIL_URL=smtp://127.0.0.1:1025   # then open http://localhost:8025
 
 ## Things to know
 
-- Queued mail needs `queue:work` running. `art dev` runs only the server: start
-  a worker beside it, or set `queue = false` locally.
+- Queued mail needs `queue:work` running: with `queue = true` and no worker, mail
+  waits in the `jobs` table and nothing is sent. `art dev` runs only the server,
+  so keep `queue = false` locally (the default).
 - SMTP opens one connection per mail (no pool: a pooled transport must be
   dropped inside a Tokio runtime).
 - The `log` mailer writes links that work: keep it out of production logs.
