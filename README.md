@@ -1,6 +1,6 @@
 # cloudsandbox
 
-The toolkit docs site, served by an app built on the toolbox crates.
+The toolkit docs site, served by an app built on the toolkit crates.
 
 ## Run locally
 

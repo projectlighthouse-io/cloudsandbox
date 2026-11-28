@@ -1,4 +1,4 @@
-//! cloudsandbox: a sandbox app for the toolbox crates. `main.rs` wires the
+//! cloudsandbox: a sandbox app for the toolkit crates. `main.rs` wires the
 //! process; [`router`] builds the HTTP stack, so tests serve exactly what
 //! production serves.
 
