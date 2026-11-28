@@ -134,6 +134,18 @@ pub fn mock(id: &str) -> String {
                 .collect();
             frame(&(bar("GET /runs/42/logs", "text/event-stream") + &term(&lines)), "seq", 750, "A server-sent event stream appending log lines")
         }
+        "crypt" => frame(
+            &(bar("crypt:rotate", "totp_secrets")
+                + &term(concat!(
+                    "<div class=\"tl\"><span class=\"g\">APP_KEY</span> k2,k1</div>",
+                    "<div class=\"tl\" data-s><span class=\"g\">page   </span> rows 1–500 · 500 re-sealed with k2</div>",
+                    "<div class=\"tl\" data-s><span class=\"g\">page   </span> rows 501–700 · 200 re-sealed with k2</div>",
+                    "<div class=\"tl ok\" data-s><span class=\"g\">done   </span> 700 re-encrypted · k1 can go</div>",
+                ))),
+            "seq",
+            1000,
+            "A column re-encrypted with the newest key",
+        ),
         "mail" => frame(
             &(bar("mailer.send", "smtp://")
                 + &term(concat!(

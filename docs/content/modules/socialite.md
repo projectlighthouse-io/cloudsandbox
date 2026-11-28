@@ -185,6 +185,7 @@ databases, and `--with-ui` for the Inertia callback and the buttons:
 | `resources/js/components/SocialButtons.vue` | "Continue with ..." links for the configured providers (`--with-ui`) |
 | `migrations/<timestamp>_create_social_accounts.*.sql` | One row per linked provider account |
 | `migrations/<timestamp>_allow_null_passwords.*.sql` | Makes `users.password_hash` nullable |
+| `migrations/<timestamp>_add_social_account_details.*.sql` | `email`, `username`, `avatar_url`, `last_used_at` on each linked account |
 
 `find_or_create_social` decides who the user is, in this order:
 
@@ -211,10 +212,34 @@ no email address at all, so they can only be connected that way too.
 > and GitHub users can only connect after logging in.
 
 Accounts made this way have no password. Password login refuses them, and they
-can set a password through "forgot password". The `allow_null_passwords`
-migration makes that column nullable. Postgres and MySQL change the column in
-place. SQLite cannot, so its migration rebuilds the `users` table with foreign
-keys switched off; if you changed `users`, list your columns in that file.
+can set a password through "forgot password". auth's `users` table allows a
+null `password_hash`; on Postgres and MySQL the `allow_null_passwords`
+migration also relaxes older tables in place. On SQLite it is empty: SQLite
+cannot drop `NOT NULL` in place, and rebuilding `users` would lose the columns
+other modules add. An older SQLite `users` table with `password_hash not null`
+needs a hand rebuild that keeps all its columns.
+
+Every login refreshes what the provider reports on the linked account
+(`email`, `username`, `avatar_url`) and sets `last_used_at`.
+
+### Connected accounts
+
+`UserStore::social_accounts(user_id)` lists a user's linked providers, and the
+`--with-ui` settings page (`/settings/connected-accounts`) shows them with a
+"Disconnect" button and "Connect" buttons for the rest. A logged-in user who
+goes through `/auth/{provider}` links it to their account; doing that for a
+provider already linked to them confirms it is them (sudo mode), which is how
+an account without a password reaches pages behind `RecentlyConfirmed`.
+
+`UserStore::unlink_social(&user, provider)` refuses to remove the last way to
+sign in: an account without a password keeps its last provider
+(`UnlinkError::LastSignIn`). If you use [passkeys](passkeys.md), count them as
+a way in there too. The unlink handler takes `RecentlyConfirmed<User>`.
+
+```rust
+r.get("/settings/connected-accounts", handlers::social::accounts).name("social.accounts");
+r.delete("/settings/connected-accounts/{provider}", handlers::social::unlink).name("social.unlink");
+```
 
 With `--with-ui`, share the list of configured providers with every page so
 the buttons know what to show:
@@ -234,6 +259,7 @@ pub struct SocialUser {
     pub provider: &'static str,      // "google", "github", or the name you gave an Oidc provider
     pub id: String,                  // the provider's stable id for this user
     pub name: Option<String>,
+    pub username: Option<String>,    // GitHub login, X username, OIDC preferred_username; None for Google
     pub email: Option<String>,
     pub email_verified: Option<bool>, // None when the provider does not say
     pub avatar: Option<String>,

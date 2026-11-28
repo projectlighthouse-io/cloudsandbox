@@ -60,7 +60,7 @@ layer goes after `auth::layer`:
 | --- | --- |
 | `sqlite`, `postgres`, `mysql` | `SqliteStore`, `PostgresStore`, `MysqlStore` |
 | `auth` | `teams::auth_user`: the user id from `auth`'s logged-in user |
-| `session` | `CurrentTeam`, the team a user last switched to |
+| `session` | `CurrentTeam`, the team a user picked, and `require_current_team` |
 
 ## Roles and permissions
 
@@ -115,19 +115,81 @@ failing the request, which suits pages that show or hide a button.
 
 ### The current team
 
-Because every route names its team, the "current team" only decides where a
-user lands and what a team switcher shows. `CurrentTeam` is the team the user
-last switched to, if they can still open it, and otherwise their first team. It
-is kept in the session:
+There are no personal teams: a user creates a team or joins one through an
+invitation. Which team they work in is their explicit choice. `CurrentTeam` is
+the team they picked, cached in the session and stored in
+`users.current_team_id` so a new login lands on it. It never falls back to
+"the first team": until the user picks one, it is `None`.
 
 ```rust
-async fn switch(m: Membership<TeamRole>, mut current: CurrentTeam<TeamRole>) -> Redirect {
-    current.set(&m);
-    Redirect::to(format!("/teams/{}", m.team.id))
+async fn switch(m: Membership<TeamRole>, mut current: CurrentTeam<TeamRole>, session: Session) -> Result<Redirect, AppError> {
+    current.set(&m).await?;
+    Ok(Redirect::to(teams::intended(&session, &format!("/teams/{}", m.team.uuid))))
 }
 ```
 
-`set` takes a `Membership`, so a user can only switch to a team they can open.
+`set` takes a `Membership`, so a user can only pick a team they can open. The
+published `store` handler picks a team as soon as the user creates it. If the
+picked team is deleted, or the user is removed from it, the next request clears
+the choice.
+
+### Routes that need a team
+
+Put them in a group behind `require_current_team`:
+
+```rust
+r.group("/app", |r| {
+    r.layer(auth::require::<User>());
+    r.layer(teams::require_current_team::<TeamRole>());
+    r.get("/dashboard", handlers::dashboard);   // CurrentTeam<TeamRole> is Some here
+});
+```
+
+With a current team the request passes and `CurrentTeam` is `Some` (resolved
+once, by the layer). Without one:
+
+| Request | Answer |
+| --- | --- |
+| Page visit, user has teams | Redirect to the picker, `/teams/select` |
+| Page visit, user has no team | Redirect to "create a team", `/teams/create` |
+| JSON | `409 Conflict`, `{"error": "team_required"}` |
+
+The page they wanted is kept: after picking or creating a team, the published
+handlers return there with `teams::intended(&session, default)`. Change the
+paths with `.select_path("/choose")` and `.create_path("/start")`.
+
+Leave the picker, "create a team", invitation links, account settings and
+logout outside the group: they must work without a team.
+
+### Your own columns on teams
+
+`Team` has the columns the module needs. For more (a slug, a plan, a billing
+id), add them in a migration of your own and read and write them with your own
+queries, keyed by the team's id. The store never selects or writes columns it
+does not know, so they survive every update of the module:
+
+```sql
+-- migrations/<timestamp>_add_slug_to_teams.up.sql
+alter table teams add column slug text unique;
+```
+
+```rust
+// src/team_slugs.rs: app code
+pub async fn slug(db: &Db<Primary>, team: i64) -> Result<Option<String>, sqlx::Error> {
+    sqlx::query_scalar("select slug from teams where id = $1").bind(team).fetch_one(db.pool()).await
+}
+
+pub async fn set_slug(db: &Db<Primary>, team: i64, slug: &str) -> Result<(), sqlx::Error> {
+    sqlx::query("update teams set slug = $1 where id = $2").bind(slug).bind(team).execute(db.pool()).await.map(drop)
+}
+
+// In a handler: the input already checked access.
+let slug = team_slugs::slug(&cx.db, membership.team.id).await?;
+```
+
+Make such columns nullable or give them a default: `create_team` inserts only
+its own columns. For something per member rather than per team, use a table of
+your own keyed by `(team_id, user_id)` the same way.
 
 ## Organizations
 
@@ -181,8 +243,9 @@ teams.accept(&token, user.id, &user.email).await?;
 An expired invitation is deleted when someone tries it. An invitation to an
 organization's team needs the user to be in the organization already.
 
-The published `send_invitation` in `src/access.rs` logs the link. Replace it
-with your mailer before going live: anyone who can read the log can join.
+The published `send_invitation` in `src/access.rs` mails the link with
+[mail](../crates/mail.md), from the template `resources/mail/invitation.md`
+(it names the team or organization). Publish `mail` first.
 
 ## Testing
 
@@ -203,4 +266,5 @@ router.layer(teams::layer(teams.clone(), |parts: &Parts| {
 - `Can<P, R>` does not compile unless `R: Grants<P>`, so a permission cannot be checked without a rule for it.
 - Non-members get `404`, never `403`.
 - An organization's owners and admins see all of its teams, with `via_org` set.
-- Invitation links are logged by the stub until you send them by mail.
+- Invitation links are mailed by the stub ([mail](../crates/mail.md)), from `resources/mail/invitation.md`.
+- No personal teams and no "last team" rule: a user may leave or delete all their teams; `require_current_team` then sends them to create one.
