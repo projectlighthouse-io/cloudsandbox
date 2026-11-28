@@ -223,6 +223,114 @@ account, so it does not reveal who is registered. A successful reset signs out
 published `send_reset_link` logs the link. It builds the link from `app_url`
 in `config/default.toml` (`env(APP_URL, ...)`), so point that at your app.
 
+## Confirming it is you (sudo mode)
+
+Some actions deserve a fresh check even for a logged-in user: turning off
+two-factor, removing a passkey, changing the email address, logging other
+browsers out. Take `RecentlyConfirmed<User>` instead of `Authed<User>` in
+those handlers:
+
+```rust
+async fn destroy(cx: Cx<App>, user: RecentlyConfirmed<User>, Path(id): Path<Uuid<Passkey>>) -> Result<Redirect, AppError> {
+    // runs only within 15 minutes of a confirmation
+}
+```
+
+Without a recent confirmation, page visits are redirected to the
+`password.confirm` route (the page they wanted is kept for
+`auth.intended(default)`) and JSON clients get `423 Locked`. The published
+confirm handler checks the password:
+
+```rust
+auth.confirm_password(&users, &input.password).await?;
+Ok(Redirect::to(auth.intended("/")))
+```
+
+Accounts made through social login have no password. They confirm with a
+passkey ([passkeys](passkeys.md) publishes `confirm_options` / `confirm`) or by
+logging in with their provider again (the published social callback does this
+for a user who is already logged in). Both end with:
+
+```rust
+auth.mark_confirmed()?;
+```
+
+How long a confirmation lasts is `password_timeout` in `auth::Config` (15
+minutes by default).
+
+## Verifying email addresses
+
+The published register handler sends a verification link. The link carries a
+random token; only its SHA-256 hash is stored, and it works for an hour in any
+browser. Implement `Verifications` on your user store (the published
+`UserStore` does) and turn on the guard:
+
+```rust
+auth::layer(users).verification()
+```
+
+```rust
+// Send a link for the current address: at most one a minute per user.
+let token = auth::verification_token(&users, &user, None).await?;
+
+// The link's handler
+auth.verify_email(&users, &token).await?;
+```
+
+Routes that need a verified address take `Verified<User>`. Unverified users
+are sent to the `verification.notice` page; JSON clients get `403`.
+
+Changing the email address uses the same links. The new address gets the link
+and replaces the old one only once it is verified:
+
+```rust
+let token = auth::verification_token(&users, &user, Some("ada@new.test")).await?;
+```
+
+`VerifyError::EmailTaken` means another account has that address. The links
+(and password reset links) are mailed with [mail](../crates/mail.md):
+`send_verification_link` in `src/handlers/verification.rs`, so `art publish
+mail` comes first.
+
+## Browsers and devices
+
+Logging in records the user on the session, with its browser, IP and when it
+was last seen (updated at most once a minute). With a SQL session store, list
+and end a user's sessions:
+
+```rust
+let devices = sessions.devices(user.id).await?;          // most recent first
+let this_one = session.public_id();                        // mark "this browser"
+
+auth.revoke_session(&sessions, public_id).await?;         // log one browser out
+auth.revoke_other_sessions(&sessions).await?;              // everywhere but here
+```
+
+Both also clear "remember me" tokens, or a revoked browser would log straight
+back in. The published `src/handlers/devices.rs` and the "Browsers & devices"
+settings page take `RecentlyConfirmed<User>` for revoking, so a stolen session
+cannot lock the owner out. See [session](../crates/session.md) for the store side.
+
+## Events
+
+With the `event` feature, give the layer your event bus and app state, and
+`auth` emits its events itself:
+
+```rust
+auth::layer(users).events(app.events.clone(), app.clone())
+```
+
+| Event | When |
+| --- | --- |
+| `SignedIn { user_id, remember, recalled }` | `login` / `login_remember`, or a remember cookie logged the user back in |
+| `SignedOut { user_id }` | `logout` |
+| `SessionRevoked { user_id, session, count }` | `revoke_session` (`session` is its `public_id`) or `revoke_other_sessions` (`None`) |
+| `EmailVerified { user_id, email, changed }` | `verify_email`; `changed` when it replaced another address |
+
+Events from `login` and `logout` are emitted after the handler returns. A
+failing listener is logged, not returned. `user_id` is your provider's id when
+it is an integer; other id types emit nothing.
+
 ## Configuration
 
 `auth::Config` holds the login route, `Secure` on the remember cookie, the
@@ -238,6 +346,9 @@ login_route = "login"
 secure = true
 remember_cookie = "remember"
 remember_for = "30d"
+confirm_route = "password.confirm"
+password_timeout = "15m"
+verify_route = "verification.notice"
 ```
 
 ```rust
@@ -250,6 +361,6 @@ it as a `configured::SecretString` and build the codec from it.
 ## Things to know
 
 - Add `auth::layer(users)` after the session and CSRF layers.
-- `Provider` (load a user by id) is the only required trait; `Credentials`, `Remember`, `Tokens` and `Resets` unlock `attempt`, "remember me", API tokens and password resets.
+- `Provider` (load a user by id) is the only required trait; `Credentials`, `Remember`, `Tokens`, `Resets` and `Verifications` unlock `attempt`, "remember me", API tokens, password resets and email verification.
 - Bearer-token requests skip the session; exempt those API routes from CSRF.
 - Handlers and pages are app code: `art publish auth` (add `--with-ui` for Inertia pages) copies them into the app to edit.

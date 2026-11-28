@@ -140,12 +140,12 @@ the same trusted-browser cookie a code would:
 ```rust
 let list = pk.passkeys(user.id).await?;               // newest first, with name, created_at, last_used_at
 pk.rename(user.id, passkey, "Work laptop").await?;    // false if it is not theirs
-pk.remove(user.id, passkey).await?;                    // behind auth::PasswordConfirmed
+pk.remove(user.id, passkey).await?;                    // behind auth::RecentlyConfirmed
 ```
 
 Passkeys are named in URLs by `public_id` (`db::Uuid<Passkey>`); the internal
 id, credential and user handle are not serialized. Removing a passkey takes
-`auth::PasswordConfirmed<User>`, so the user confirms their password first.
+`auth::RecentlyConfirmed<User>`, so the user confirms their password first.
 
 ## Rate limiting
 

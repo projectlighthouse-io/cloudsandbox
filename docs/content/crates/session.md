@@ -107,6 +107,30 @@ messages shown after a redirect.
 Call `regenerate()` when a user logs in, so the session gets a fresh id.
 Invalidate the session when they log out.
 
+## Browsers and devices
+
+A session that belongs to a user (`session.set_user(Some(id))`, which `auth`
+calls on login) records its browser's user agent and IP, and when it was last
+seen. `last_seen_at` is written at most once a minute, or at once when the
+browser or IP changes; anonymous sessions are never touched for it.
+
+The SQL stores and `MemoryStore` implement `Devices`:
+
+```rust
+use session::Devices;
+
+let devices = store.devices(user_id).await?;                 // unexpired, most recent first
+let current = session.public_id();                            // this browser, to mark in the list
+store.revoke(user_id, public_id).await?;                      // end one session
+store.revoke_others(user_id, current.unwrap()).await?;        // end the rest
+```
+
+Each `Device` is named by a random `public_id` (a UUID); the session id never
+leaves the encrypted cookie. The columns come with `art publish session`; apps
+that published it earlier get only the `add_session_devices` migration. Times
+are unix seconds and `ip` is text. `RedisStore` keeps the device in the session
+but cannot list a user's sessions.
+
 ## Pruning expired sessions
 
 Expired records are removed by a command, `session:prune`, not on the request

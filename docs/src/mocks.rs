@@ -134,6 +134,18 @@ pub fn mock(id: &str) -> String {
                 .collect();
             frame(&(bar("GET /runs/42/logs", "text/event-stream") + &term(&lines)), "seq", 750, "A server-sent event stream appending log lines")
         }
+        "mail" => frame(
+            &(bar("mailer.send", "smtp://")
+                + &term(concat!(
+                    "<div class=\"tl\"><span class=\"g\">to     </span> Ada &lt;ada@acme.test&gt;</div>",
+                    "<div class=\"tl\" data-s><span class=\"g\">subject</span> Verify your email address</div>",
+                    "<div class=\"tl\" data-s><span class=\"g\">link   </span> /verify-email/Qm9v…dA</div>",
+                    "<div class=\"tl ok\" data-s><span class=\"g\">250    </span> queued as 7f3a</div>",
+                ))),
+            "seq",
+            1000,
+            "A verification mail sent over SMTP",
+        ),
         "queue" => frame(
             &(bar("queue:work", "concurrency 8")
                 + "<div class=\"rows fade\">"
