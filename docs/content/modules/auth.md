@@ -223,6 +223,30 @@ account, so it does not reveal who is registered. A successful reset signs out
 published `send_reset_link` logs the link; set `APP_URL` so it points at your
 app.
 
+## Configuration
+
+`auth::Config` holds the login route, `Secure` on the remember cookie, the
+remember cookie's name and how long it lasts. `.config(cfg)` checks it and
+returns a `ConfigError` for an empty login route, an invalid cookie name, or a
+lifetime outside one second to 400 days (the browser cap). With the
+`configured` feature it loads from config files with
+[configured](../crates/configured.md):
+
+```toml
+[auth]
+login_route = "login"
+secure = true
+remember_cookie = "remember"
+remember_for = "30d"
+```
+
+```rust
+auth::layer(users).config(cfg.auth)?.remember(codec)
+```
+
+The app key that signs the remember cookie is not part of `auth::Config`: load
+it as a `configured::SecretString` and build the codec from it.
+
 ## Things to know
 
 - Add `auth::layer(users)` after the session and CSRF layers.

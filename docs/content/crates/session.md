@@ -39,6 +39,7 @@ a database feature.
 | `postgres` | `PostgresStore` |
 | `mysql` | `MysqlStore` |
 | `sqlite` | `SqliteStore` |
+| `configured` | `session::Config` loads from config files |
 
 ## Configuring the layer
 
@@ -63,6 +64,29 @@ session.regenerate();
 
 The session id is random, never derived from user data, and only ever sent
 encrypted.
+
+### From a config file
+
+All cookie settings live in `session::Config`. Pass one with `.config(cfg)`,
+which checks it first: an invalid cookie name, a lifetime under a second, or
+`SameSite=None` without `Secure` (browsers drop such cookies) is a
+`ConfigError` at startup. Setters called after `.config` change single fields.
+
+With the `configured` feature, load it with
+[configured](configured.md). Missing keys keep their defaults
+(`session`, 14 days, `lax`, `secure = true`); unknown keys are an error:
+
+```toml
+[session]
+cookie_name = "app_session"
+lifetime = "2h"
+same_site = "strict"   # strict | lax | none
+secure = true
+```
+
+```rust
+let sessions = session::layer(store, codec).config(cfg.session)?;
+```
 
 ## Working with session data
 

@@ -93,6 +93,26 @@ Both return a `SingletonError` that names the handle instead of panicking.
 `set_singleton` twice returns `AlreadySet` and keeps the first handle, because a
 singleton is set once and never replaced.
 
+## Pool settings
+
+`Db::connect_with(url, &cfg)` builds the pool from a `db::PoolConfig`, whose
+defaults are sqlx's: 10 connections at most, none kept open, a 30 second
+acquire timeout, 10 minutes idle and 30 minutes lifetime. An impossible config
+(no connections, a minimum above the maximum, zero timeouts) is a
+`sqlx::Error::Configuration` and opens nothing. With the `configured` feature it
+loads with [configured](configured.md):
+
+```toml
+[db]
+max_connections = 20
+acquire_timeout = "5s"
+max_lifetime = "never"   # no limit
+```
+
+```rust
+let primary = Db::<Primary>::connect_with(&cfg.database_url, &cfg.db).await?;
+```
+
 ## Things to know
 
 - Declare a handle per database with `db::handle!(pub Primary: Postgres)`; `Db<Primary>` and `Db<Analytics>` are different types, so they cannot be mixed up.

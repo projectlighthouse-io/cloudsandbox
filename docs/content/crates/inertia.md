@@ -86,6 +86,31 @@ When the version a client sends does not match the current one, the layer
 responds with `409` and an `X-Inertia-Location` header, and the client reloads
 the page to pick up the new assets.
 
+### From a config file
+
+`inertia::Config` covers the root template, the pages directory, history
+encryption and SSR. The asset version, `head` and `share` stay methods, since
+they are code. `.config(cfg)` reads the template right away and fails instead
+of falling back: a missing template, one without `{{ inertia }}`, an SSR URL
+that is not `http://`, or `ssr_url` without the `ssr` feature is a
+`ConfigError`. An empty string means unset, so `INERTIA_SSR_URL=` turns SSR
+off.
+
+```toml
+[inertia]
+root_template = "resources/views/app.html"
+pages_dir = "resources/js/pages"
+ssr_url = "env(INERTIA_SSR_URL)"
+ssr_timeout = "2s"
+```
+
+```rust
+inertia::layer().config(cfg.inertia)?.version(&vite.manifest_hash())
+```
+
+Turn on the `configured` feature to load it with
+[configured](configured.md).
+
 ## Expensive props
 
 Some props are costly to compute or not needed on the first render. Wrap them

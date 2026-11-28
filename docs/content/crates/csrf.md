@@ -68,6 +68,21 @@ pub trait TokenStore {
 `session` implements this trait, so with sessions in place there is nothing more
 to write. The token is rotated whenever the session id is regenerated.
 
+## Configuration
+
+`csrf::Config` holds the one setting, `secure`, for the `XSRF-TOKEN` cookie.
+Route exemptions stay in code with `except`. With the `configured` feature it
+loads from config files with [configured](configured.md):
+
+```toml
+[csrf]
+secure = true
+```
+
+```rust
+csrf::layer::<Session>().config(cfg.csrf).except(["webhooks.github"])
+```
+
 ## Things to know
 
 - Add the CSRF layer after the session layer. Unsafe methods must send the token in `X-XSRF-TOKEN` (the Inertia client does this from the `XSRF-TOKEN` cookie) or, for a plain HTML form, a `_token` field.

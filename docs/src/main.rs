@@ -16,7 +16,7 @@ const CATS: &[(&str, &[&str])] = &[
     ("Sessions and security", &["securecookie", "session", "csrf", "throttle"]),
     ("Frontend", &["inertia", "vite", "sse"]),
     ("Background work", &["queue", "event", "command"]),
-    ("Data", &["db"]),
+    ("Data", &["db", "configured"]),
     ("Modules", &["auth", "password", "socialite", "teams"]),
 ];
 const MODULES: &[&str] = &["auth", "password", "socialite", "teams"];

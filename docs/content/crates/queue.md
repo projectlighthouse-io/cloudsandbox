@@ -112,6 +112,27 @@ before recording a result, the job becomes claimable again once the timeout
 passes, and another worker picks it up. This is one reason jobs need to be
 idempotent.
 
+### From a config file
+
+`queue::WorkerConfig` holds the queues, concurrency, visibility and poll
+interval. `worker.config(cfg)` returns a `ConfigError` for no queues, zero
+concurrency, a visibility under one second (the SQL stores keep whole seconds,
+so less would hand running jobs to other workers) or a zero poll interval.
+With the `configured` feature it loads with
+[configured](configured.md):
+
+```toml
+[queue]
+queues = ["high", "default"]
+concurrency = 8
+visibility = "10m"
+poll = "500ms"
+```
+
+```rust
+Worker::new(queue, app).register::<SendWelcome>().config(cfg.queue)?
+```
+
 ## Writing a store
 
 Storage sits behind the `Store` trait. The bundled drivers implement it, and

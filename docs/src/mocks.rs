@@ -184,6 +184,18 @@ pub fn mock(id: &str) -> String {
             1000,
             "A compile error caught when two database handles are mixed up",
         ),
+        "configured" => frame(
+            &(bar("configured::load(\"config\")", "APP_ENV=production")
+                + &term(concat!(
+                    "<div class=\"tl\"><span class=\"g\">read</span> config/default.toml, config/production.toml</div>",
+                    "<div class=\"tl\" data-s><span class=\"g\">app_name</span> env(APP_NAME, my-app) → my-app</div>",
+                    "<div class=\"tl\" data-s><span class=\"g\">app_key</span> required_secret_env(APP_KEY) → ********</div>",
+                    "<div class=\"tl bad\" data-s><span class=\"g\">database_url</span> DATABASE_URL is not set</div>",
+                ))),
+            "seq",
+            1100,
+            "Config files resolved against env vars: a default, a masked secret, and a missing required var",
+        ),
         "auth" => frame(
             &(bar("POST /login", "") + &stepper(&[("Credentials checked", "password::verify"), ("Session regenerated", "new id, old one invalid"), ("Authed&lt;User&gt; available", "Elizabeth Lane")])),
             "steps",
