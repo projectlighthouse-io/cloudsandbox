@@ -1,6 +1,6 @@
 ---
 builds_on: `session` (to hold `state` and the PKCE verifier between redirect and callback), `reqwest`
-version: 0.1.0
+version: 0.1.2
 ---
 
 # socialite
@@ -43,6 +43,8 @@ socialite = { git = "https://github.com/projectlighthouse-io/toolkit", features 
 | `oidc` | `Oidc`: any OpenID Connect provider (Okta, Keycloak, Azure AD, ...) | Yes, with a verified flag |
 | `auth0` | `Auth0` (turns on `oidc`) | Yes, with a verified flag |
 
+Feature `configured` adds `ProviderConfig` and `from_config` on each provider.
+
 The `route` feature adds ready-made routes; see
 [Ready-made routes](#ready-made-routes).
 
@@ -81,7 +83,40 @@ let auth0 = Auth0::new("acme.eu.auth0.com", id, secret, callback);
 `hosted_domain` is checked against the user Google returns, not just passed to
 Google as a hint, because a hint can be removed from the URL.
 
-## Redirecting and handling the callback
+### From a config file
+
+With the `configured` feature, each provider can be built from a
+`socialite::ProviderConfig` loaded with [configured](../crates/configured.md).
+The client secret is a `SecretString`, so it never shows up in logs or in
+`config:show`:
+
+```toml
+[socialite.github]
+client_id = "required_env(GITHUB_CLIENT_ID)"
+client_secret = "required_secret_env(GITHUB_CLIENT_SECRET)"
+redirect_url = "https://myapp.com/auth/github/callback"
+scopes = ["read:user", "user:email"]   # optional: the provider's defaults
+
+[socialite.auth0]
+client_id = "required_env(AUTH0_CLIENT_ID)"
+client_secret = "required_secret_env(AUTH0_CLIENT_SECRET)"
+redirect_url = "https://myapp.com/auth/auth0/callback"
+base_url = "https://acme.eu.auth0.com"
+```
+
+```rust
+let github = GitHub::from_config(cfg.socialite.github)?;
+let auth0 = Auth0::from_config(cfg.socialite.auth0)?;
+let okta = Oidc::discover_config("okta", cfg.socialite.okta).await?;
+```
+
+`base_url` is the tenant for Auth0, the issuer for OpenID Connect and a
+self-hosted instance for GitLab. Auth0 and OpenID Connect require it, and the
+other providers reject it. `from_config` returns a `ConfigError` for empty
+credentials, a redirect URL that is not an absolute `http(s)` URL, or an empty
+scope. A failed OpenID Connect discovery is a `ConfigError` too.
+
+
 
 Two handlers complete the flow: one sends the user to the provider, and one
 receives them when they come back. Both are your app's code. Bring the

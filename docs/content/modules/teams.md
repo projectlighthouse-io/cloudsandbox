@@ -1,6 +1,6 @@
 ---
 builds_on: `route` for the inputs, `auth` (feature) for the current user, `session` (feature) for the current team, `sqlx` for the stores
-version: 0.1.0
+version: 0.2.1
 ---
 
 # teams

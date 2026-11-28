@@ -1,6 +1,6 @@
 ---
 builds_on: `tokio` for `wait`; `route` and `tower` for the middleware; `sqlx` for the SQL stores
-version: 0.1.0
+version: 0.1.1
 ---
 
 # throttle
@@ -34,6 +34,7 @@ Everything beyond the in-memory limiter is behind a feature:
 | `route` | `throttle::layer`, route middleware answering `429` |
 | `postgres`, `sqlite`, `mysql` | SQL stores, so several servers share one limit |
 | `command` | `throttle::command::prune` for `throttle:prune` |
+| `configured` | The algorithms deserialize from config files |
 
 ## Limiting anything
 
@@ -86,7 +87,37 @@ Limiter::memory(TokenBucket::new(10, 1, Duration::from_secs(1)));         // bur
 To count some other way, implement `Algorithm`. It receives the state it stored
 last time and returns a decision plus the new state.
 
-## Calling external services
+### Limits from a config file
+
+With the `configured` feature, `FixedWindow`, `SlidingWindow` and
+`TokenBucket` deserialize directly, so the numbers can live in your config
+(loaded with [configured](configured.md)):
+
+```toml
+[limits.login]      # FixedWindow or SlidingWindow
+max = 5
+window = "1m"
+
+[limits.github]     # TokenBucket
+capacity = 60
+refill = 1
+every = "1s"
+```
+
+```rust
+#[derive(serde::Deserialize)]
+pub struct Limits {
+    pub login: throttle::FixedWindow,
+    pub github: throttle::TokenBucket,
+}
+
+let login = Limiter::memory(cfg.limits.login);
+```
+
+A limit that would deny every hit or never refill (`max = 0`, `refill = 0`, a
+zero window) fails to load. Unknown keys are an error.
+
+
 
 For a third-party API with a rate limit of its own, use `wait`. It sleeps until
 the next call is allowed instead of failing:

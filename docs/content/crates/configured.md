@@ -1,6 +1,6 @@
 ---
 builds_on: `config-rs` for files, `secrecy` for secrets, `dotenvy` for `.env`
-version: 0.1.0
+version: 0.2.0
 ---
 
 # configured
@@ -47,8 +47,7 @@ pub struct Config {
     pub db: db::PoolConfig,
 }
 
-let loaded = configured::load::<Config>("config")?;
-let cfg = loaded.value;
+let Loaded { value: cfg, listing } = configured::load::<Config>("config")?;
 
 let codec = Codec::new(Keys::parse(cfg.app_key.expose_secret())?);
 let primary = Db::<Primary>::connect_with(&cfg.database_url, &cfg.db).await?;
@@ -91,7 +90,7 @@ such as `production` or `staging`.
 
 A value that is exactly one of these forms is replaced with an env var:
 
-| Form | When the var is unset or empty | Masked in `show()` |
+| Form | When the var is unset or empty | Redacted in `show()` |
 | --- | --- | --- |
 | `env(NAME)` | The key is left out, so the field's default applies | No |
 | `env(NAME, fallback)` | `fallback` is used | No |
@@ -122,16 +121,31 @@ config: 2 env problem(s)
 
 Declare secret fields as `configured::SecretString`. Its `Debug` prints
 `[REDACTED]`, and reading it takes an explicit `expose_secret()`. The `secret_`
-forms also mark the key, so `show()` masks it and error messages never contain
-the value.
+forms also mark the key, so `show()` prints `<redacted>` for it and error
+messages never contain the value.
 
-`loaded.show()` lists every resolved key, for a `config:show` command. It
-masks:
+`loaded.listing.show()` lists every key set in a file or by an env var, for a
+`config:show` command. Keys you leave out keep their defaults and are not
+listed. It prints `<redacted>` for:
 
 - keys loaded with a `secret_` form;
 - keys named like a secret (`*_key`, `*_secret`, `*_password`, `*_token`), even
   when the value is written in the file;
-- the password in a URL (`postgres://user:********@host/db`).
+- the password in a URL (`postgres://user:<redacted>@host/db`).
+
+`loaded.listing.show_secret_values()` prints the same list with the real
+values. Call it only on an explicit request; the generated app uses
+`config:show --print-secret-values`, which also prints a warning.
+
+Keep the listing from the startup load and hand it to the command, so
+`config:show` prints exactly what the app loaded without reading the files
+again:
+
+```rust
+let Loaded { value: cfg, listing } = configured::load::<Config>("config")?;
+// ...
+.add("config:show", config::show(listing))
+```
 
 ## Things to know
 

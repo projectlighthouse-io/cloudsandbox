@@ -13,11 +13,13 @@ you can rearrange to suit your app.
 myapp/
 ├── Cargo.toml
 ├── .env.example
+├── config/
+│   └── default.toml   # settings per crate; config/<APP_ENV>.toml overrides
 ├── src/
 │   ├── main.rs        # explicit wiring: config, db, queue, events, router
 │   ├── state.rs       # App struct: handles and actions
 │   ├── routes.rs      # every route in one place
-│   ├── config.rs      # typed config from the environment
+│   ├── config.rs      # typed config, loaded by `configured`
 │   ├── error.rs       # AppError -> response
 │   ├── handlers/      # grouped however the app likes
 │   ├── actions/
@@ -53,20 +55,21 @@ sight:
 ```rust
 #[tokio::main]
 async fn main() -> Result<(), AppError> {
-    let cfg = Config::from_env()?;
+    let cfg = Config::load()?.value; // config/*.toml, env(...) resolved, fails fast
 
-    let db: Db<Primary> = Db::connect(&cfg.database_url).await?;
+    let db: Db<Primary> = Db::connect_with(&cfg.database_url, &cfg.db).await?;
     let queue = Queue::new(queue::PostgresStore::new(db.pool()));
-    let codec = securecookie::Codec::new(cfg.app_keys()?);
+    let codec = securecookie::Codec::new(Keys::parse(cfg.app_key.expose_secret())?);
     let vite = Vite::load("public/build")?;
 
     let app = App::new(cfg, db.clone(), queue.clone());
+    let c = &app.cfg;
 
     let events = events::register(&app, &queue).build();
     let router = routes::register(Router::new())
-        .layer(session::layer(session::PostgresStore::new(db.pool()), codec))
-        .layer(csrf::layer().except(["webhooks.github"]))
-        .layer(inertia::layer().version(vite.manifest_hash()))
+        .layer(session::layer(session::PostgresStore::new(db.pool()), codec).config(c.session.clone())?)
+        .layer(csrf::layer().config(c.csrf.clone()).except(["webhooks.github"]))
+        .layer(inertia::layer().config(c.inertia.clone())?.version(vite.manifest_hash()))
         .build(app.clone())?;
 
     commands::register(&app, &router, &queue)
@@ -121,3 +124,21 @@ The docs are written to be read by coding agents as well as people:
   describes the layout, the `art` commands and the rules above, and links the docs.
   `art publish <crate>` adds that crate's notes. Codex, Cursor and Claude Code read it
   automatically, so an agent working in your app starts from the same conventions you do.
+
+## Configuration
+
+`config/default.toml` holds the settings, one section per crate. Values that
+differ per machine or are secret come from env vars (and `.env`) through
+`env(...)` forms, which [configured](crates/configured.md) resolves at startup:
+
+```toml
+app_key = "required_secret_env(APP_KEY)"
+database_url = "required_env(DATABASE_URL)"
+
+[session]
+lifetime = "2h"
+```
+
+A missing required variable, an unknown key or an invalid value stops startup
+with every problem listed. `config:show` prints the loaded keys with secrets as
+`<redacted>`; `config:show --print-secret-values` prints the real values.

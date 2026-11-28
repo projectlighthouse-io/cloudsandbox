@@ -1,6 +1,6 @@
 ---
 builds_on: `session`, `route`, `password`; `throttle` for login limits
-version: 0.1.2
+version: 0.1.3
 ---
 
 # auth
@@ -220,8 +220,8 @@ let user = auth::reset_password(&users, &input.email, &input.token, &input.passw
 The forgot-password form answers the same way whether or not the email has an
 account, so it does not reveal who is registered. A successful reset signs out
 "remember me" devices and logs the user in. Until you connect a mailer, the
-published `send_reset_link` logs the link; set `APP_URL` so it points at your
-app.
+published `send_reset_link` logs the link. It builds the link from `app_url`
+in `config/default.toml` (`env(APP_URL, ...)`), so point that at your app.
 
 ## Configuration
 
