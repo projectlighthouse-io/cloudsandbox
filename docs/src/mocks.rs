@@ -221,6 +221,13 @@ pub fn mock(id: &str) -> String {
             1100,
             "The OAuth redirect and callback flow ending in a typed user",
         ),
+        "passkeys" => frame(
+            &(bar("Sign in with a passkey", "")
+                + &stepper(&[("Options", "challenge kept in the session"), ("Touch ID", "the device signs for acme.test"), ("Verified", "MacBook · counter and flags saved"), ("auth.login", "Elizabeth Lane · no code asked")])),
+            "steps",
+            1100,
+            "A passwordless sign-in: challenge, the device signs, the server verifies and logs in",
+        ),
         "teams" => frame(
             &(bar("Acme · Platform", "")
                 + &stepper(&[("Organization", "Acme · you are an admin"), ("Team", "Platform · owner through Acme"), ("Invite", "ada@acme.dev as member"), ("Can<InviteMembers>", "admin · granted")])),

@@ -17,9 +17,9 @@ const CATS: &[(&str, &[&str])] = &[
     ("Frontend", &["inertia", "vite", "sse"]),
     ("Background work", &["queue", "event", "command"]),
     ("Data", &["db", "configured"]),
-    ("Modules", &["auth", "password", "socialite", "teams"]),
+    ("Modules", &["auth", "password", "socialite", "passkeys", "teams"]),
 ];
-const MODULES: &[&str] = &["auth", "password", "socialite", "teams"];
+const MODULES: &[&str] = &["auth", "password", "socialite", "passkeys", "teams"];
 
 struct Page {
     id: &'static str,
