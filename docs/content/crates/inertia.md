@@ -1,6 +1,6 @@
 ---
 builds_on: `http`, `tower`, `serde`, `serde_json`
-version: 0.1.0
+version: 0.1.1
 ---
 
 # inertia

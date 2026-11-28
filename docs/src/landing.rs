@@ -148,7 +148,7 @@ pub fn page(index_json: &str) -> String {
 </div></section>
 
 <section aria-labelledby="h-compose">{s1}<div class="rail-box grid">
-<div class="cell hcell reveal"><h2 id="h-compose">Take one crate. Or all seventeen.</h2><p class="lede">Each component has its own crate and version. Integrations between them are features you switch on, never dependencies you inherit.</p></div>
+<div class="cell hcell reveal"><h2 id="h-compose">Take one crate. Or all nineteen.</h2><p class="lede">Each component has its own crate and version. Integrations between them are features you switch on, never dependencies you inherit.</p></div>
 <div class="row2">{compose}</div></div></section>
 
 <section aria-labelledby="h-req" id="parts">{s2}<div class="rail-box grid">

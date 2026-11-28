@@ -1,6 +1,6 @@
 ---
 builds_on: `sqlx`, with one database feature
-version: 0.2.0
+version: 0.2.1
 ---
 
 # db

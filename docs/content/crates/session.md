@@ -1,6 +1,6 @@
 ---
 builds_on: `securecookie`, `http`, `tower`, `serde`
-version: 0.1.0
+version: 0.1.2
 ---
 
 # session
